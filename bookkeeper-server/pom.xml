@@ -326,7 +326,7 @@
                 </goals>
                 <phase>verify</phase>
                 <configuration>
-                  <workingDirectory>${basedir}</workingDirectory>
+                  <workingDirectory>${basedir}/../</workingDirectory>
                   <executable>${project.basedir}/../ba-dua-jars/cli-commands-report.sh</executable>
                 </configuration>
               </execution>
