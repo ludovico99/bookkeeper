@@ -321,7 +321,7 @@
       <dependencies>
         <dependency>
           <groupId>br.usp.each.saeg</groupId>
-          <artifactId>ba-dua-cli</artifactId>
+          <artifactId>ba-dua</artifactId>
           <version>${ba-dua.version}</version>
         </dependency>
       </dependencies>
