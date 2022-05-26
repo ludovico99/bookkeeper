@@ -71,39 +71,11 @@
     <module>tests</module>
     <module>native-io</module>
     <module>testtools</module>
+	
+	<!-- Ho aggiunto il modulo bookkeeper-aggregate-coverage -->
+	<module>bookkeeper-aggregate-coverage</module>
   </modules>
-  <mailingLists>
-    <mailingList>
-      <name>BookKeeper User</name>
-      <subscribe>user-subscribe@bookkeeper.apache.org</subscribe>
-      <unsubscribe>user-unsubscribe@bookkeeper.apache.org</unsubscribe>
-      <post>user@bookkeeper.apache.org</post>
-      <archive>http://www.mail-archive.com/user@bookkeeper.apache.org</archive>
-    </mailingList>
-    <mailingList>
-      <name>BookKeeper Dev</name>
-      <subscribe>dev-subscribe@bookkeeper.apache.org</subscribe>
-      <unsubscribe>dev-unsubscribe@bookkeeper.apache.org</unsubscribe>
-      <post>dev@bookkeeper.apache.org</post>
-      <archive>http://www.mail-archive.com/dev@bookkeeper.apache.org</archive>
-    </mailingList>
-    <mailingList>
-      <name>BookKeeper Commits</name>
-      <subscribe>commits-subscribe@bookkeeper.apache.org</subscribe>
-      <unsubscribe>commits-unsubscribe@bookkeeper.apache.org</unsubscribe>
-      <post>commits@bookkeeper.apache.org</post>
-      <archive>http://www.mail-archive.com/commits@bookkeeper.apache.org</archive>
-    </mailingList>
-  </mailingLists>
-  <developers>
-    <developer>
-      <name>The Apache BookKeeper Team</name>
-      <email>dev@bookkeeper.apache.org</email>
-      <url>http://bookkeeper.apache.org</url>
-      <organization>Apache Software Foundation</organization>
-      <organizationUrl>http://www.apache.org</organizationUrl>
-    </developer>
-  </developers>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -111,6 +83,12 @@
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <testRetryCount>2</testRetryCount>
     <test.additional.args />
+	
+	 <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/bookkeeper-aggregate-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+	<sonar.organization>ludovico99</sonar.organization>
+	<sonar.projectKey>ludovico99_bookkeeper</sonar.projectKey>
+	
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
     <!-- dependencies -->
     <arquillian-cube.version>1.18.2</arquillian-cube.version>
@@ -1170,6 +1148,32 @@
         </plugins>
       </build>
     </profile>
+	
+	<!-- profilo per jacoco -->
+	
+	<profile>
+      <id>jacocoCoverageProfile</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+	
     <profile>
       <id>dev-debug</id>
       <build>
