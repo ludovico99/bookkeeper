@@ -192,7 +192,7 @@
       <scope>test</scope>
     </dependency>
   <!--  <dependency>
-       <!-- needed by ZooKeeper server tests utilities 
+       needed by ZooKeeper server tests utilities 
        <groupId>org.junit.jupiter</groupId>
        <artifactId>junit-jupiter-api</artifactId>
        <scope>test</scope>
@@ -258,7 +258,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
 		
-       <!-- <configuration>
+        <configuration>
           <trimStackTrace>false</trimStackTrace>
           <properties>
             <property>
@@ -266,7 +266,7 @@
               <value>org.apache.bookkeeper.common.testing.util.TimedOutTestsListener</value>
             </property>
           </properties>
-        </configuration> -->
+        </configuration>
 
       </plugin>
       <plugin>
