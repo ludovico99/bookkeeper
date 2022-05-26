@@ -3,11 +3,7 @@
 
 name: CI/CD Data flow coverage (ba-dua) for Bookkeeper
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: workflow_dispatch
 
 jobs:
   build:
