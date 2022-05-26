@@ -191,10 +191,16 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+     <dependency>
+       <!-- needed by ZooKeeper server -->
+       <groupId>org.xerial.snappy</groupId>
+       <artifactId>snappy-java</artifactId>
+       <scope>test</scope>
+    </dependency>
     <dependency>
-      <!-- needed by ZooKeeper server tests utilities -->
-       <groupId>org.junit.jupiter</groupId>
-       <artifactId>junit-jupiter-api</artifactId>
+        <!-- needed by ZooKeeper server -->
+       <groupId>io.dropwizard.metrics</groupId>
+       <artifactId>metrics-core</artifactId>
        <scope>test</scope>
     </dependency>
     <dependency>
@@ -257,7 +263,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
-		
+	<!--
         <configuration>
           <trimStackTrace>false</trimStackTrace>
           <properties>
@@ -267,6 +273,7 @@
             </property>
           </properties>
         </configuration>
+		-->
 
       </plugin>
       <plugin>
@@ -377,7 +384,7 @@
     </profile>
 
     <profile>
-      <id>mutation-testing</id>
+      <id>mutation-testingProfile</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
