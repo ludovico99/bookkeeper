@@ -24,6 +24,7 @@
   </parent>
   <artifactId>bookkeeper-server</artifactId>
   <name>Apache BookKeeper :: Server</name>
+  
   <dependencies>
     <dependency>
       <groupId>org.apache.bookkeeper</groupId>
