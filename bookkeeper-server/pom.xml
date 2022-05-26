@@ -294,6 +294,48 @@
     </plugins>
   </build>
   <profiles>
+  
+  
+  <profile>
+  
+	<!-- profilo per eseguire l'analisi con ba-dua nel sottomodulo bookkeeper server -->
+  
+      <id>ba-dua-coverageProfile</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <argLine>-javaagent:../ba-dua-jars/ba-dua-agent-rt-0.6.0-all.jar -Doutput.file=target/badua.ser</argLine>
+      </properties>
+      <!-- Needed for generate the report -->
+      <build>
+        <plugins>
+
+          <!-- Generate report in xml format -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.5.0</version>
+            <executions>
+              <execution>
+                <id>Generate Ba-Dua report</id>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <phase>verify</phase>
+                <configuration>
+                  <workingDirectory>${project.basedir}</workingDirectory>
+                  <executable>${project.basedir}/../ba-dua-jars/cli-commands-report.sh</executable>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  
+  
     <profile>
       <id>vertx-http-server</id>
       <dependencies>
