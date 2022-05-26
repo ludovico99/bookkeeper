@@ -73,7 +73,7 @@
     <module>testtools</module>
 	
 	<!-- Ho aggiunto il modulo bookkeeper-aggregate-coverage -->
-	<module>bookkeeper-aggregate-coverage</module>
+<module>bookkeeper-aggregate-coverage</module>
   </modules>
 
   <properties>
@@ -83,10 +83,9 @@
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <testRetryCount>2</testRetryCount>
     <test.additional.args />
-	
-	 <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/bookkeeper-aggregate-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-	<sonar.organization>ludovico99</sonar.organization>
-	<sonar.projectKey>ludovico99_bookkeeper</sonar.projectKey>
+	  
+    <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/bookkeeper-aggregate-coverage/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.organization>ludovico99</sonar.organization>
 	
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 
