@@ -41,3 +41,7 @@ jobs:
         with:
           name: badua.xml
           path: bookkeeper-server/target/badua.xml
+
+	
+	-download: current
+  	 artifact: badua.xml
