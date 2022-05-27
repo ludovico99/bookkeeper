@@ -352,9 +352,10 @@
 						<goal>test</goal>
 					</goals>
 				</execution>	
-            <configuration>
+			</executions>
+		<configuration>
               <argLine>-javaagent:../ba-dua-jars/ba-dua-agent-rt-0.6.0-all.jar -Doutput.file=target/badua.ser</argLine>
-            </configuration>
+          </configuration>
           </plugin>
 		
 		
