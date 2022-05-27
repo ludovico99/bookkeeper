@@ -5,6 +5,7 @@ BADUASER="./target/badua.ser"
 CLASSES="./target/classes"
 BADUAXML="./target/badua.xml"
 
+
 java -jar ${BADUACLI} report    \
         -input ${BADUASER}      \
         -classes ${CLASSES}     \
