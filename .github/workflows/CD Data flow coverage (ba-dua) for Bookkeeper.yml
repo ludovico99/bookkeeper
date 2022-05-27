@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
       - shell: bash
-        run: sudo chmod a+x ./ba-dua-jars/cli-commands-report.sh
+        run: sudo chmod a+x /home/runner/work/bookkeeper/bookkeeper/ba-dua-jars/cli-commands-report.sh
       
 
       - name: Set up JDK 8
