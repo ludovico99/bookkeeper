@@ -282,6 +282,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
+		
+		
 	<!--
         <configuration>
           <trimStackTrace>false</trimStackTrace>
@@ -340,6 +342,22 @@
       <!-- Needed for generate the report -->
       <build>
         <plugins>
+		
+		 <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+			<executions>
+				<execution>
+					<goals>
+						<goal>test</goal>
+					</goals>
+				</execution>	
+            <configuration>
+              <argLine>-javaagent:../ba-dua-jars/ba-dua-agent-rt-0.6.0-all.jar -Doutput.file=target/badua.ser</argLine>
+            </configuration>
+          </plugin>
+		
+		
           <!-- Generate report in xml format -->
          <plugin>
             <groupId>org.codehaus.mojo</groupId>
