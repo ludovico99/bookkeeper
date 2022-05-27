@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<classpath>
+	<classpathentry kind="src" output="ba-dua-jars/target/classes" path="ba-dua-jars/ba.dua-cli-0.6.0-all.jar">
+		<attributes>
+			<attribute name="badua.cli" value="true"/>
+		</attributes>
+	</classpathentry>
+</classpath>
