@@ -341,7 +341,7 @@
       <build>
         <plugins>
           <!-- Generate report in xml format -->
-          <!--<plugin>
+         <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <version>1.5.0</version>
@@ -354,39 +354,27 @@
                 <phase>verify</phase>
                 <configuration>
                   <workingDirectory>${project.basedir}</workingDirectory>
-                  <executable>${project.basedir}/../ba-dua-jars/cli-commands-report.sh</executable>
+                  <!--<executable>${project.basedir}/../ba-dua-jars/cli-commands-report.sh</executable>-->
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>-jar</argument>
+                                        <argument>../ba-dua-jars/ba-dua-cli-0.6.0-all.jar</argument>
+                                        <argument>report</argument>
+                                        <argument>-input</argument>
+                                        <argument>./target/badua.ser</argument>
+										<argument>-classes</argument>
+										<argument>${project.build.outputDirectory}</argument>
+										<argument>-show-classes</argument>
+										<argument>-show-methods</argument>
+										<argument>-xml</argument>
+										<argument>${project.build.directory}/badua.xml</argument>
+									</arguments>
                 </configuration>
               </execution>
             </executions>
-          </plugin> -->
+          </plugin> 
 		  
-		  <plugin>
-		  <groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.5.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>java</goal>
-						</goals>
-						<phase>verify</phase>
-						<configuration>
-							<addClasspath>true</addClasspath>
-							<mainClass>badua.cli.Report</mainClass>
-							<arguments>
-								<argument>-input</argument>
-								<argument>${project.build.directory}/badua.ser</argument>
-								<argument>-classes</argument>
-								<argument>${project.build.outputDirectory}</argument>
-								<argument>-show-classes</argument>
-								<argument>-show-methods</argument>
-								<argument>-xml</argument>
-								<argument>${project.build.directory}/badua.xml</argument>
-							</arguments>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+	
 
         </plugins>
       </build>
