@@ -41,4 +41,4 @@ jobs:
       - name: Download a Build Artifact
         uses: actions/download-artifact@v3.0.0
         with:
-         path: bookkeeper-server/target/badua.xml
+         path: bookkeeper-server/target/
