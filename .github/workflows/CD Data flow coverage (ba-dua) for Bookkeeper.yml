@@ -10,14 +10,15 @@ jobs:
 
     runs-on: ubuntu-latest
     
-    container:
-      options: --user root
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+      - shell: bash
+        run: sudo chmod a+x ./ba-dua-jars/cli-commands-report.sh
+      
 
       - name: Set up JDK 8
         uses: actions/setup-java@v3
