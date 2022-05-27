@@ -10,8 +10,7 @@ jobs:
 
     runs-on: ubuntu-latest
     
-    container:
-      options: --user root
+    permissions: read-all|write-all
 
     steps:
       - name: Checkout
