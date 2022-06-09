@@ -432,14 +432,11 @@
             <version>${pitest.version}</version>
             <configuration>
               <targetClasses>
-                <param>org.apache.bookkeeper.bookie.BookieImpl</param>
-                <param>org.apache.bookkeeper.net.NetworkTopologyImpl*</param>
-                <param>org.apache.bookkeeper.net.NodeBase</param>
-                <param>org.apache.bookkeeper.net.BookieNode</param>
+                <param>org.apache.bookkeeper.proto.BookieClientImpl*</param>
               </targetClasses>
               <targetTests>
-                <param>org.apache.bookkeeper.bookie.BookieImplTests*</param>
-                <param>org.apache.bookkeeper.net.NetworkTopologyImplTests*</param>
+                <param>org.apache.bookkeeper.proto.BookieImplTest*</param>
+                
               </targetTests>
               <avoidCallsTo>
                 <avoidCallsTo>org.slf4j</avoidCallsTo>
