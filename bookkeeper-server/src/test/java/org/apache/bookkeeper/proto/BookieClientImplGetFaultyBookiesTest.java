@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 
 
 @RunWith(value = Parameterized.class)
-public class BookieClientImplTestB extends BookKeeperClusterTestCase {
+public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestCase {
 
     private Boolean exceptionInConfigPhase = false;
 
@@ -36,7 +36,7 @@ public class BookieClientImplTestB extends BookKeeperClusterTestCase {
     private List<BookieId> expectedFaultyBookies;
 
 
-    public BookieClientImplTestB(int nFaultyBookies, List<BookieId> faultyBookies) {
+    public BookieClientImplGetFaultyBookiesTest(int nFaultyBookies, List<BookieId> faultyBookies) {
         super(0);
         configureGetFaultyBookies(nFaultyBookies,  faultyBookies);
 

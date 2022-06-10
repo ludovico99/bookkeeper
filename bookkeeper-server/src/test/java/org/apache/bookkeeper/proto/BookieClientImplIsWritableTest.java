@@ -1,8 +1,5 @@
 package org.apache.bookkeeper.proto;
 
-import com.google.common.collect.Lists;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -27,7 +24,7 @@ import java.util.concurrent.Executors;
 
 
 @RunWith(value = Parameterized.class)
-public class BookieClientImplTestC extends BookKeeperClusterTestCase {
+public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
     private Boolean exceptionInConfigPhase = false;
 
@@ -42,7 +39,7 @@ public class BookieClientImplTestC extends BookKeeperClusterTestCase {
     private Boolean expectedIllegalArgumentException = false;
 
 
-    public BookieClientImplTestC(ParamType BookieId,long key,Object isWritable) {
+    public BookieClientImplIsWritableTest(ParamType BookieId, long key, Object isWritable) {
         super(1);
 
         configureIsWritable(BookieId, key,isWritable);

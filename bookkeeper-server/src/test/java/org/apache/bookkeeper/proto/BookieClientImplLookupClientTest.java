@@ -10,7 +10,6 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
-import org.apache.bookkeeper.tls.SecurityException;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.After;
 import org.junit.Assert;
@@ -25,7 +24,7 @@ import java.util.concurrent.Executors;
 
 
 @RunWith(value = Parameterized.class)
-public class BookieClientImplTestD extends BookKeeperClusterTestCase {
+public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase {
 
     private static Boolean exceptionInConfigPhase = false;
     private static final ClientConfiguration confLookup = TestBKConfiguration.newClientConfiguration();
@@ -40,7 +39,7 @@ public class BookieClientImplTestD extends BookKeeperClusterTestCase {
     private Boolean expectedIllegalArgumentException = false;
 
 
-    public BookieClientImplTestD(ParamType BookieId, ParamType bookieClient, Object isWritable) {
+    public BookieClientImplLookupClientTest(ParamType BookieId, ParamType bookieClient, Object isWritable) {
         super(1);
         configureLookupClient(BookieId, bookieClient, isWritable);
 

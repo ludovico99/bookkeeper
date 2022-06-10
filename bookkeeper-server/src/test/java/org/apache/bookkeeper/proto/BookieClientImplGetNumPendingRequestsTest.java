@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 
 
 @RunWith(value = Parameterized.class)
-public class BookieClientImplTest extends BookKeeperClusterTestCase {
+public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperClusterTestCase {
 
     private Boolean exceptionInConfigPhase = false;
 
@@ -47,7 +47,7 @@ public class BookieClientImplTest extends BookKeeperClusterTestCase {
     private Long numberPendingRequestToInsert = 1L;
 
 
-    public BookieClientImplTest(ParamType bookieId, ParamType ledgerId , Object expectedNumPendingRequests) {
+    public BookieClientImplGetNumPendingRequestsTest(ParamType bookieId, ParamType ledgerId , Object expectedNumPendingRequests) {
         super(1);
         configureGetNumPendingRequests(bookieId, ledgerId, expectedNumPendingRequests);
     }
