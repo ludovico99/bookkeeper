@@ -5,5 +5,6 @@ public enum ParamType {
     INVALID_INSTANCE,
     NULL_INSTANCE,
     INVALID_CONFIG,
-    VALID_CONFIG
+    VALID_CONFIG,
+    CLOSED_CONFIG
 }

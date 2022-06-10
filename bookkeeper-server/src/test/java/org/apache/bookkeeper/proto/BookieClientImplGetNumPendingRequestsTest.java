@@ -9,7 +9,6 @@ import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
@@ -17,13 +16,11 @@ import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ByteBufList;
 import org.apache.bookkeeper.util.ParamType;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -35,10 +32,10 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperClusterTestCase {
 
-    private Boolean exceptionInConfigPhase = false;
+    private static Boolean exceptionInConfigPhase = false;
+    private static BookieClientImpl bookieClientImpl;
 
     //Test: getNumPendingRequests(BookieId address, long ledgerId)
-    private BookieClientImpl bookieClientImpl;
     private Object expectedNumPendingRequests;
     private Long ledgerId;
     private ParamType bookieIdParamType;
@@ -52,25 +49,22 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         configureGetNumPendingRequests(bookieId, ledgerId, expectedNumPendingRequests);
     }
 
+    private static void setBookieClientImpl() throws IOException {
+        bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration(), new NioEventLoopGroup(),
+                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+    }
+
     private void configureGetNumPendingRequests(ParamType bookieId, ParamType ledgerId, Object expectedValue) {
 
         this.bookieIdParamType = bookieId;
         this.numberPendingRequestToInsert = 1L;
 
-        try {
-
-            ClientConfiguration confGetNumPendingRequests = TestBKConfiguration.newClientConfiguration();
-
-            this.bookieClientImpl = new BookieClientImpl(confGetNumPendingRequests, new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
-
-
-            switch (bookieId){
+        switch (bookieId){
                 case VALID_INSTANCE:
                     this.expectedNumPendingRequests = expectedValue;
-                    this.numberPendingRequestToInsert = (Long) expectedValue;
+                    if (!ledgerId.equals(ParamType.NULL_INSTANCE)) this.numberPendingRequestToInsert = (Long) expectedValue;
                     break;
 
                 case NULL_INSTANCE:
@@ -102,11 +96,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             }
 
-
-        }catch (Exception e){
-            e.printStackTrace();
-            this.exceptionInConfigPhase = true;
-        }
     }
 
     @Before
@@ -151,6 +140,13 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() {
+        try {
+            setBookieClientImpl();
+        }catch (Exception e){
+            e.printStackTrace();
+            exceptionInConfigPhase = true;
+        }
+
         return Arrays.asList(new Object[][]{
                 // Bookie Id,     ledger Id,   expectedNumPendingRequests
                 {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE,          10L},
@@ -166,12 +162,16 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     @After
     public void tear_down() throws Exception {
 
-        this.bookieClientImpl.close();
         for (int i=0 ; i< numBookies;i++) {
             serverByIndex(i).getBookie().shutdown();
             serverByIndex(i).shutdown();
         }
 
+    }
+
+    @AfterClass
+    public static void closeAll(){
+        bookieClientImpl.close();
     }
 
     @Test

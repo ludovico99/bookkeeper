@@ -12,6 +12,7 @@ import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -94,6 +95,11 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                 if (bookieId.equals(ParamType.INVALID_INSTANCE))
                     this.expectedIllegalArgumentException = true;
                 break;
+
+            case CLOSED_CONFIG:
+                validConfig.close();
+                this.bookieClient = validConfig;
+                break;
         }
 
     }
@@ -121,7 +127,8 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
             return Arrays.asList(new Object[][]{
                     //BookieId,                  Class Config,              ExpectedValue
                     {ParamType.VALID_INSTANCE, ParamType.VALID_CONFIG,          pool},
-                    //{ParamType.INVALID_INSTANCE, ParamType.VALID_CONFIG,        pool3},
+                    //{ParamType.INVALID_INSTANCE, ParamType.VALID_CONFIG,        pool},
+                    {ParamType.INVALID_INSTANCE, ParamType.CLOSED_CONFIG,        null},
                     {ParamType.VALID_INSTANCE, ParamType.INVALID_CONFIG,        pool2},
                     {ParamType.INVALID_INSTANCE, ParamType.INVALID_CONFIG, new IllegalArgumentException()},
                     {ParamType.NULL_INSTANCE, ParamType.VALID_CONFIG, new NullPointerException()}
@@ -146,6 +153,12 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
         }
     }
 
+    @AfterClass
+    public static void closeAll(){
+        validConfig.close();
+        invalidConfig.close();
+    }
+
 
 
 
@@ -162,7 +175,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                 try {
                     this.bookieClient.lookupClient(this.bookieId);
                 } catch (NullPointerException  | IllegalArgumentException e) {
-                    Assert.assertEquals("Exception that i expect was raised", this.expectedLookupClient.getClass(), e.getClass());
+                    Assert.assertEquals("Exception that I expect was raised", this.expectedLookupClient.getClass(), e.getClass());
                 }
 
             } else Assert.assertEquals(this.expectedLookupClient, this.bookieClient.lookupClient(this.bookieId));

@@ -11,10 +11,7 @@ import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ParamType;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -97,9 +94,6 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
             this.bookieId = serverByIndex(0).getBookieId();
 
-            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(),bcIsWritable,this.bookieId,1);
-            pool.clients[0].setWritable(false);
-
 
         }
 
@@ -150,9 +144,6 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
         }
     }
-
-
-
 
 
     @Test
