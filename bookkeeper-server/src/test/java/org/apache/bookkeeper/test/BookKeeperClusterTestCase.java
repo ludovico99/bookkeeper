@@ -703,6 +703,7 @@ public abstract class BookKeeperClusterTestCase {
         return tester;
     }
 
+
     public void setMetastoreImplClass(AbstractConfiguration conf) {
         conf.setMetastoreImplClass(InMemoryMetaStore.class.getName());
     }
