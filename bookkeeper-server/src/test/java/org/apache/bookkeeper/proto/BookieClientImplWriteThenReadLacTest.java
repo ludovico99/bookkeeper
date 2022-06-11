@@ -1,6 +1,7 @@
 package org.apache.bookkeeper.proto;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
@@ -67,7 +68,6 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
         switch (ledgerId) {
             case VALID_INSTANCE:
-                this.ledgerId = 0L;
                 break;
 
             case NULL_INSTANCE:
@@ -109,16 +109,21 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             bookieServer.getBookie().getLedgerStorage().setMasterKey(0,
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
-            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
+
 
            LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
 
            handle.addEntry("This is the entry content".getBytes(StandardCharsets.UTF_8));
 
-            bookieClientImpl.writeLac(serverByIndex(0).getBookieId(), 0L, "masterKey".getBytes(StandardCharsets.UTF_8),  handle.getLastAddConfirmed(),
+            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
+                this.bookieId = serverByIndex(0).getBookieId();
+                this.ledgerId = handle.getId();
+            }
+            
+            bookieClientImpl.writeLac(serverByIndex(0).getBookieId(), handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),  handle.getLastAddConfirmed(),
                     ByteBufList.get(Unpooled.buffer("This is the entry content".getBytes(StandardCharsets.UTF_8).length)), mockWriteLacCallback(), this.ctx);
 
-            while(bookieClientImpl.getNumPendingRequests(serverByIndex(0).getBookieId(), 0L) != 0) {
+            while(bookieClientImpl.getNumPendingRequests(serverByIndex(0).getBookieId(), handle.getId()) != 0) {
                 System.out.println("Write not completed yet");
             }
 
@@ -141,13 +146,12 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
         return Arrays.asList(new Object[][]{
                 //Bookie_ID                         Led_ID                          ReadLacCallback                   ctx        RaiseException
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Object(),       0},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Object(),       0},
                 { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.NULL_INSTANCE,  new Object(),        true},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        true},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        true},
-//                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),         -8},
-//                { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),         -8},
+                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),         -13},
+                { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true}
         }) ;
@@ -181,12 +185,8 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                     System.out.println("Waiting");
                 }
 
-                //if(this.ledgerIdParamType.equals(ParamType.INVALID_INSTANCE)) verifyNoInteractions(this.readLacCallback);
-
-                if(this.bookieIdParamType.equals(ParamType.INVALID_INSTANCE)
-                || this.ledgerIdParamType.equals(ParamType.INVALID_INSTANCE)) verify(this.readLacCallback).readLacComplete((Integer) this.expectedReadLac,this.ledgerId, null, null, this.ctx);
-
-                else {
+                if(this.bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) verifyNoInteractions(this.readLacCallback);
+                else{
                     ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
                     verify(this.readLacCallback).readLacComplete(argument.capture(), isA(Long.class), isA(ByteBuf.class), isA(ByteBuf.class), isA(Object.class));
                     Assert.assertEquals(this.expectedReadLac, argument.getValue());
