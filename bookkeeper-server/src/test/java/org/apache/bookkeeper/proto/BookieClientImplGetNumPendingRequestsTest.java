@@ -45,7 +45,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
 
     public BookieClientImplGetNumPendingRequestsTest(ParamType bookieId, ParamType ledgerId , Object expectedNumPendingRequests) {
-        super(1);
+        super(3);
         configureGetNumPendingRequests(bookieId, ledgerId, expectedNumPendingRequests);
     }
 
@@ -108,15 +108,10 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         bookieServer.getBookie().getLedgerStorage().setMasterKey(0,
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
-        AsyncCallback.CreateCallback cb = mockCreateCallback();
-
-        bkc.asyncCreateLedger(3,2, BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8)
-        ,cb,new Object());
+        bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
 
         DefaultPerChannelBookieClientPool pool = (DefaultPerChannelBookieClientPool) bookieClientImpl.
                 lookupClient(bookieServer.getBookieId());
-
-        BookkeeperInternalCallbacks.WriteCallback cb2 = mockWriteCallback();
 
         spyDefaultPerChannelBookieClientPool(pool.clients[0]);
 
@@ -124,15 +119,10 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         ByteBufList byteBufList = ByteBufList.get(byteBuf);
         EnumSet<WriteFlag> writeFlags = EnumSet.allOf(WriteFlag.class);
 
-        verify(cb).createComplete(isA(Integer.class), any(),
-                isA(Object.class)); //Ho almeno un ledger
-
-        //Per continuare dovrei assicurarmi di avere un ledger
-
 
         for (long i = 0; i< numberPendingRequestToInsert; i++) {
             pool.clients[0].addEntry(0L, bookieServer.getBookie().getLedgerStorage().readMasterKey(0L),
-                    0, byteBufList, cb2, new Object(), 0, false, writeFlags);
+                    0, byteBufList,mockWriteCallback(), new Object(), 0, false, writeFlags);
         }
 
     }
@@ -177,7 +167,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     @Test
     public void test_getNumPendingRequests() {
 
-        if (this.exceptionInConfigPhase) Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (exceptionInConfigPhase) Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
                     " been thrown.", true);
         else {
             if (expectedNullPointerExNumPendingRequests) {

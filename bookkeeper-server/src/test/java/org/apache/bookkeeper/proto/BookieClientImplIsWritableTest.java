@@ -70,12 +70,18 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
                     this.expectedIsWritable = expected;
                     this.expectedNullPointerEx = true;
                     break;
+
             }
 
             this.bcIsWritable = new BookieClientImpl(confIsWritable, new NioEventLoopGroup(),
                     UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+
+            if (enumType.equals(ParamType.CLOSED_CONFIG)) {
+                    this.bcIsWritable.close();
+                    this.expectedIsWritable = expected;
+            }
 
         }catch (Exception e){
             e.printStackTrace();
@@ -89,17 +95,10 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     @Before
     public void set_up() throws Exception {
 
+        if(!bookieIdParamType.equals(ParamType.NULL_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
 
-        if (bookieIdParamType.equals(ParamType.INVALID_CONFIG)) {
-
-            this.bookieId = serverByIndex(0).getBookieId();
-
-
-        }
 
         if(bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) {
-
-            this.bookieId = serverByIndex(0).getBookieId();
 
             DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(),bcIsWritable,this.bookieId,1);
             pool.clients[0].setWritable(false);
@@ -109,7 +108,6 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
         if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
 
-            this.bookieId = serverByIndex(0).getBookieId();
 
             DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(),bcIsWritable,this.bookieId,1);
 
@@ -127,6 +125,7 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
                 //BookieId,                     key,  ExpectedValue
                 {ParamType.VALID_INSTANCE,     -1L,         true},
                 {ParamType.INVALID_INSTANCE,   -1L,         false},
+                {ParamType.CLOSED_CONFIG,      -1L,         true},
                 {ParamType.INVALID_CONFIG,      2L,         new IllegalArgumentException()},
                 {ParamType.NULL_INSTANCE,       1L,         new NullPointerException()}
 
