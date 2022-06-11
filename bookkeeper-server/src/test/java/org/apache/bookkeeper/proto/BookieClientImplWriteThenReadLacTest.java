@@ -3,6 +3,7 @@ package org.apache.bookkeeper.proto;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
+import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.net.BookieId;
@@ -14,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 
+import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -35,8 +37,8 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     private Object expectedReadLac;
     private Long ledgerId;
     private ParamType bookieIdParamType;
-    private ParamType ledgerIdParamType;
     private BookieId bookieId;
+    private Boolean expectedNoInteraction = false;
 
 
 
@@ -48,7 +50,6 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     private void configureReadLac(ParamType bookieId, ParamType ledgerId, ParamType cb, Object ctx, Object expectedReadLac) {
 
         this.bookieIdParamType = bookieId;
-        this.ledgerIdParamType = ledgerId;
         this.ctx = ctx;
         this.expectedReadLac = expectedReadLac;
 
@@ -76,6 +77,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
             case INVALID_INSTANCE:
                 this.ledgerId = -1L;
+                this.expectedNoInteraction = true;
                 break;
 
         }
@@ -106,27 +108,25 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
         try {
             BookieServer bookieServer = serverByIndex(0);
-            bookieServer.getBookie().getLedgerStorage().setMasterKey(0,
-                    "masterKey".getBytes(StandardCharsets.UTF_8));
 
+            LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
 
+//            bookieServer.getBookie().getLedgerStorage().setMasterKey(handle.getLedgerMetadata().getLedgerId(),
+//                    "masterKey".getBytes(StandardCharsets.UTF_8));
 
-           LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
-
-           handle.addEntry("This is the entry content".getBytes(StandardCharsets.UTF_8));
+           long entryId = handle.addEntry("This is the entry content".getBytes(StandardCharsets.UTF_8));
 
             if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
                 this.bookieId = serverByIndex(0).getBookieId();
-                this.ledgerId = handle.getId();
+                this.ledgerId = handle.getLedgerMetadata().getLedgerId();
             }
 
-            bookieClientImpl.writeLac(serverByIndex(0).getBookieId(), handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    handle.readLastAddConfirmed(),
-                    ByteBufList.get(Unpooled.buffer("This is the entry content".getBytes(StandardCharsets.UTF_8).length)), mockWriteLacCallback(), this.ctx);
 
-            while(bookieClientImpl.getNumPendingRequests(serverByIndex(0).getBookieId(), handle.getId()) != 0) {
-                System.out.println("Write not completed yet");
-            }
+            bookieClientImpl.writeLac(serverByIndex(0).getBookieId(), handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                    handle.getLastAddConfirmed(), ByteBufList.get(Unpooled.buffer("This is the entry content".getBytes(StandardCharsets.UTF_8).length)), mockWriteLacCallback(), this.ctx);
+
+            while(bookieClientImpl.getNumPendingRequests(serverByIndex(0).getBookieId(), handle.getLedgerMetadata().getLedgerId()) != 0){}
+
 
             if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
@@ -140,18 +140,15 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() {
 
-        //ByteBuf byteBuf = Unpooled.buffer("This is the entry content".getBytes(StandardCharsets.UTF_8).length);
-
-        //boolean interactions = false; //For invalid istances callback won't be invoked
 
         return Arrays.asList(new Object[][]{
                 //Bookie_ID                         Led_ID                          ReadLacCallback                   ctx        RaiseException
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Object(),       0},
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Object(),       false},
                 { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.NULL_INSTANCE,  new Object(),        true},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        true},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        true},
-              //  { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),         -13},
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        false},
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        false},
+                //{ ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),        false},
                 { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true}
@@ -161,12 +158,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     @After
     public void tear_down() throws Exception {
 
-        this.bookieClientImpl.close();
-
-        for (int i=0 ; i< numBookies;i++) {
-            serverByIndex(i).getBookie().shutdown();
-            serverByIndex(i).shutdown();
-        }
+       this.tearDown();
 
     }
 
@@ -182,16 +174,13 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             try {
                 bookieClientImpl.readLac(this.bookieId, this.ledgerId, this.readLacCallback, this.ctx);
 
-                while(bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0){
-                    System.out.println("Waiting");
-                }
+                while(bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0);
 
-                if(this.bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) verifyNoInteractions(this.readLacCallback);
-                else{
-                    ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
-                    verify(this.readLacCallback).readLacComplete(argument.capture(), isA(Long.class), isA(ByteBuf.class), isA(ByteBuf.class), isA(Object.class));
-                    Assert.assertEquals(this.expectedReadLac, argument.getValue());
-                }
+                if(expectedNoInteraction) verifyNoInteractions(this.readLacCallback);
+//                    ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
+//                    verify(this.readLacCallback).readLacComplete(argument.capture(), isA(Long.class), isA(ByteBuf.class), isA(ByteBuf.class), isA(Object.class));
+//                    Assert.assertEquals(this.expectedReadLac, argument.getValue());
+                Assert.assertFalse("No exception was expected", (Boolean) this.expectedReadLac);
             } catch (Exception e){
                 e.printStackTrace();
                 Assert.assertTrue("An exception was expected", (Boolean) this.expectedReadLac);
