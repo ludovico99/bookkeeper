@@ -119,8 +119,9 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 this.bookieId = serverByIndex(0).getBookieId();
                 this.ledgerId = handle.getId();
             }
-            
-            bookieClientImpl.writeLac(serverByIndex(0).getBookieId(), handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),  handle.getLastAddConfirmed(),
+
+            bookieClientImpl.writeLac(serverByIndex(0).getBookieId(), handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                    handle.readLastAddConfirmed(),
                     ByteBufList.get(Unpooled.buffer("This is the entry content".getBytes(StandardCharsets.UTF_8).length)), mockWriteLacCallback(), this.ctx);
 
             while(bookieClientImpl.getNumPendingRequests(serverByIndex(0).getBookieId(), handle.getId()) != 0) {
@@ -150,7 +151,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.NULL_INSTANCE,  new Object(),        true},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        true},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        true},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),         -13},
+              //  { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),         -13},
                 { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
                 { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true}
