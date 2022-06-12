@@ -11,6 +11,7 @@ import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
 import org.apache.bookkeeper.conf.ClientConfiguration;
+import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
@@ -23,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -37,12 +39,13 @@ import static org.mockito.Mockito.*;
 public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestCase {
 
     private static Boolean exceptionInConfigPhase = false;
+    private static ClientConfiguration clientConf;
+    private static BookieClientImpl bookieClientImpl;
 
 
     //Test:   readEntry(BookieId addr, long ledgerId, long entryId,
     //                          ReadEntryCallback cb, Object ctx, int flags)
     private BookkeeperInternalCallbacks.ReadEntryCallback readCallback;
-    private  BookieClient bookieClientImpl;
     private int flags;
     private Object ctx;
     private Object expectedRead;
@@ -59,6 +62,14 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
         super(3);
         configureAddThenRead(bookieId, ledgerId, entryId, cb, ctx, flags, expectedReadLac);
 
+    }
+
+    private static void setBookieClientImpl() throws IOException {
+        clientConf = TestBKConfiguration.newClientConfiguration();
+        bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
+                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
     }
 
     private void configureAddThenRead(ParamType bookieId, ParamType ledgerId, ParamType entryId, ParamType cb, Object ctx, int flags, Object expectedReadLac) {
@@ -136,11 +147,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         try {
 
-            this.bookieClientImpl = new BookieClientImpl(new ClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
-
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
@@ -179,6 +185,13 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() {
+
+        try {
+            setBookieClientImpl();
+        }catch (Exception e){
+            e.printStackTrace();
+            exceptionInConfigPhase = true;
+        }
 
         return Arrays.asList(new Object[][]{
                     //Bookie_ID                   Ledger_id                   Entry_id                ReadEntryCallback          Object               Flags                      Raise exception

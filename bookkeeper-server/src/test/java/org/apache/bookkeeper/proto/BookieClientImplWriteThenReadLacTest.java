@@ -3,11 +3,19 @@ package org.apache.bookkeeper.proto;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
+import org.apache.bookkeeper.common.util.OrderedExecutor;
+import org.apache.bookkeeper.conf.ClientConfiguration;
+import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
+import org.apache.bookkeeper.net.BookieSocketAddress;
+import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ByteBufList;
 import org.apache.bookkeeper.util.ParamType;
@@ -17,8 +25,10 @@ import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 
 import java.awt.*;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.Executors;
 
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
@@ -28,12 +38,13 @@ import static org.mockito.Mockito.*;
 public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestCase {
 
     private static Boolean exceptionInConfigPhase = false;
+    private static ClientConfiguration clientConf;
+    private static BookieClientImpl bookieClientImpl;
 
 
     //Test: readLac(final BookieId addr, final long ledgerId, final ReadLacCallback cb,
     //            final Object ctx)
     private BookkeeperInternalCallbacks.ReadLacCallback readLacCallback;
-    private  BookieClient bookieClientImpl;
     private Object ctx;
     private Object expectedReadLac;
     private Long ledgerId;
@@ -100,14 +111,21 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
     }
 
+    private static void setBookieClientImpl() throws IOException {
+        clientConf = TestBKConfiguration.newClientConfiguration();
+        bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
+                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+    }
+
 
 
     @Before
     public void set_up() {
 
-        this.bookieClientImpl = bkc.getBookieClient();
-
         try {
+
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
@@ -143,7 +161,12 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() {
-
+        try {
+            setBookieClientImpl();
+        }catch (Exception e){
+            e.printStackTrace();
+            exceptionInConfigPhase = true;
+        }
 
         return Arrays.asList(new Object[][]{
                 //Bookie_ID                         Led_ID                          ReadLacCallback                   ctx        RaiseException
