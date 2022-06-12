@@ -162,7 +162,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     @After
     public void tear_down() throws Exception {
 
-       this.tearDown();
+        for (int i=0; i<numBookies; i++){
+            serverByIndex(i).shutdown();
+            serverByIndex(i).getBookie().shutdown();
+        }
 
     }
 
