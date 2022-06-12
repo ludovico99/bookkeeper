@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
@@ -88,6 +89,10 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                 this.bookieId = BookieId.parse("Bookie");
                 break;
 
+            case CLOSED_CONFIG:
+                this.bookieId = BookieId.parse("Bookie");
+                break;
+
         }
 
         switch (ledgerId) {
@@ -114,14 +119,14 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                 break;
 
             case INVALID_INSTANCE:
-                this.entryId = -5L;
+                this.entryId = -1L;
                 break;
 
         }
 
         switch (cb) {
             case VALID_INSTANCE:
-                this.readCallback = mockReadCallback();
+                this.readCallback = readCallback();
                 break;
 
             case NULL_INSTANCE:
@@ -142,35 +147,45 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         try {
 
+            Counter counter = new Counter();
+
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
+            counter.inc();
+            handle.asyncAddEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8),addCallback(),counter);
+
+            counter.wait(0);
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
-            ByteBuf byteBuf= Unpooled.wrappedBuffer("hello".getBytes(StandardCharsets.UTF_8));
-            ByteBufList bufList = ByteBufList.get(byteBuf);
+            counter = new Counter();
 
-            bookieServer.getBookie().addEntry(byteBuf,true,
-                    mockWriteCallback(),new Object(),"masterKey".getBytes(StandardCharsets.UTF_8));
+            counter.inc();
+            ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
+            ByteBufList byteBufList = ByteBufList.get(byteBuf);
+            bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                    0L, byteBufList , writeCallback(), counter, BookieProtocol.ADDENTRY,false, EnumSet.allOf(WriteFlag.class));
 
-            bookieClientImpl.addEntry(bookieId, handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                   0L,bufList , mockWriteCallback(), new Object(), BookieProtocol.ADDENTRY,false, WriteFlag.NONE);
+            counter.wait(0);
 
             if(bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
-                this.bookieId = bookieServer.getBookieId();
+                this.bookieId = bookieId;
             }
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)){
-                this.ledgerId = handle.getLedgerMetadata().getLedgerId();
+                this.ledgerId = handle.getId();
             }
+
+
             if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) bookieClientImpl.close();
 
 
         }catch (Exception e){
-            exceptionInConfigPhase = true;
+            e.printStackTrace();
+           // exceptionInConfigPhase = true;
         }
 
     }
@@ -187,14 +202,15 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
         }
 
         return Arrays.asList(new Object[][]{
-                    //Bookie_ID                   Ledger_id                   Entry_id                ReadEntryCallback          Object               Flags                      Raise exception
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     BKException.Code.OK},
-                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     true},
-                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     BKException.Code.NoSuchEntryException},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     true},
-                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     true},
-                {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,     ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Object() , BookieProtocol.READENTRY,     true}
+                    //Bookie_ID                   Ledger_id                   Entry_id                         ReadEntryCallback           Object                 Flags                      Raise exception
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,     BKException.Code.OK},
+                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,     BKException.Code.BookieHandleNotAvailableException},
+                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,     BKException.Code.NoSuchLedgerExistsException},
+                //{  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,     BKException.Code.NoSuchEntryException},
+                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,     true},
+                {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,     ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,     true},
+                {  ParamType.CLOSED_CONFIG,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY,       true},
+                {  ParamType.CLOSED_CONFIG,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY,      BKException.Code.ClientClosedException}
 
         }) ;
     }
@@ -220,18 +236,16 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
         else {
             try {
 
-                bookieClientImpl.readEntry(this.bookieId, this.ledgerId,this.entryId, this.readCallback,this.ctx,this.flags,"masterKey".getBytes(StandardCharsets.UTF_8));
+                ((Counter)this.ctx).inc();
 
-                while(bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0){
-                    // System.out.println("Waiting reading completion");
-                }
+                bookieClientImpl.readEntry(this.bookieId, this.ledgerId, this.entryId, this.readCallback, this.ctx, this.flags,"masterKey".getBytes(StandardCharsets.UTF_8));
+
+                ((Counter)this.ctx).wait(0);
 
                 ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
-                    verify(this.readCallback).readEntryComplete(argument.capture(), isA(long.class), isA(long.class),
-                            isA(ByteBuf.class), isA(Object.class));
-                    Assert.assertEquals(this.expectedRead, argument.getValue());
-
-                 //Assert.assertFalse("No raising exception", (Boolean) this.expectedRead);
+                verify(this.readCallback).readEntryComplete(argument.capture(), anyLong(), anyLong(),
+                           nullable(ByteBuf.class), isA(Object.class));
+                Assert.assertEquals(this.expectedRead, argument.getValue());
 
             } catch (Exception e){
                 e.printStackTrace();
@@ -242,20 +256,67 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     }
 
 
-    public BookkeeperInternalCallbacks.WriteCallback mockWriteCallback(){
-        BookkeeperInternalCallbacks.WriteCallback cb = mock(BookkeeperInternalCallbacks.WriteCallback.class);
-        doNothing().when(cb).writeComplete(isA(Integer.class),isA(long.class),isA(long.class),isA(BookieId.class),
-                isA(Object.class));
+    private BookkeeperInternalCallbacks.WriteCallback writeCallback(){
 
-        return cb;
+        return (rc, ledger, entry, addr, ctx1) -> {
+            Counter counter = (Counter) ctx1;
+            counter.dec();
+            System.out.println("WRITE: rc = " + rc + " for entry: " + entry + " at ledger: " +
+                    ledger + " at bookie: " + addr );
+
+        };
     }
 
-    public BookkeeperInternalCallbacks.ReadEntryCallback mockReadCallback(){
-        BookkeeperInternalCallbacks.ReadEntryCallback cb = mock(BookkeeperInternalCallbacks.ReadEntryCallback.class);
-        doNothing().when(cb).readEntryComplete(isA(Integer.class), isA(long.class),  isA(long.class),
-                isA(ByteBuf.class), isA(Object.class));
+    private BookkeeperInternalCallbacks.ReadEntryCallback readCallback(){
 
-        return cb;
+        return spy(new BookkeeperInternalCallbacks.ReadEntryCallback() {
+
+            @Override
+            public void readEntryComplete(int rc, long ledgerId1, long entryId1, ByteBuf buffer, Object ctx1) {
+                Counter counter = (Counter) ctx1;
+                counter.dec();
+                System.out.println("READ: rc = " + rc + " for entry: " + entryId1 + " at ledger: " + ledgerId1);
+            }
+        });
+    }
+
+    private AsyncCallback.AddCallback addCallback(){
+
+        return new AsyncCallback.AddCallback() {
+
+            @Override
+            public void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx) {
+                Counter counter = (Counter) ctx;
+                counter.dec();
+                System.out.println("ADD: rc = " + rc + " entry : " + entryId + " at ledger: " + lh.getId());
+            }
+
+        };
+    }
+
+    private static class Counter {
+        int i;
+        int total;
+
+        synchronized void inc() {
+            i++;
+            total++;
+        }
+
+        synchronized void dec() {
+            i--;
+            notifyAll();
+        }
+
+        synchronized void wait(int limit) throws InterruptedException {
+            while (i > limit) {
+                wait();
+            }
+        }
+
+        synchronized int total() {
+            return total;
+        }
     }
 
 

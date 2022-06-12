@@ -5,12 +5,11 @@ import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
-import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
@@ -74,6 +73,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 this.bookieId = BookieId.parse("Bookie");
                 break;
 
+            case CLOSED_CONFIG:
+                this.bookieId = BookieId.parse("Bookie");
+                break;
+
         }
 
         switch (ledgerId) {
@@ -85,14 +88,14 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 break;
 
             case INVALID_INSTANCE:
-                this.ledgerId = -5L;
+                this.ledgerId = -1L;
                 break;
 
         }
 
         switch (cb) {
             case VALID_INSTANCE:
-                this.readLacCallback = mockReadLacCallback();
+                this.readLacCallback = readLacCallback();
                 break;
 
             case NULL_INSTANCE:
@@ -120,27 +123,35 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     public void set_up() {
 
         try {
+            Counter counter = new Counter();
 
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
 
+            counter.inc();
+            handle.asyncAddEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8),addCallback(),counter);
+
+            counter.wait(0);
+
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                             "masterKey".getBytes(StandardCharsets.UTF_8));
 
-            ByteBuf byteBuf= Unpooled.wrappedBuffer("hello".getBytes(StandardCharsets.UTF_8));
-            ByteBufList bufList = ByteBufList.get(byteBuf);
+            counter = new Counter();
+            counter.inc();
 
-            bookieServer.getBookie().addEntry(byteBuf,true,
-                    mockWriteCallback(),new Object(),"masterKey".getBytes(StandardCharsets.UTF_8));
+//            bookieClientImpl.addEntry(bookieId, handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+//                    0L,byteBufList , mockWriteCallback(), new Object(), BookieProtocol.ADDENTRY,false, WriteFlag.NONE);
 
-            bookieClientImpl.addEntry(bookieId, handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    0L,bufList , mockWriteCallback(), new Object(), BookieProtocol.ADDENTRY,false, WriteFlag.NONE);
+            ByteBuf byteBuf = Unpooled.wrappedBuffer("Last add confirmed write".getBytes(StandardCharsets.UTF_8));
+            ByteBufList byteBufList = ByteBufList.get(byteBuf);
 
             bookieClientImpl.writeLac(bookieId, handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    handle.getLastAddConfirmed(), ByteBufList.get(Unpooled.buffer("This is the entry content".getBytes(StandardCharsets.UTF_8).length)), mockWriteLacCallback(), new Object());
+                    handle.getLastAddConfirmed(), byteBufList, writeLacCallback(), counter);
+
+            counter.wait(0);
 
             if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
@@ -148,7 +159,8 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) bookieClientImpl.close();
 
         }catch (Exception e){
-            exceptionInConfigPhase = true;
+            e.printStackTrace();
+            //exceptionInConfigPhase = false;
         }
 
     }
@@ -165,15 +177,13 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
         return Arrays.asList(new Object[][]{
                 //Bookie_ID                         Led_ID                          ReadLacCallback                   ctx        RaiseException
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Object(),       BKException.Code.OK},
-                { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
-                { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.NULL_INSTANCE,  new Object(),        true},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        false},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.NULL_INSTANCE,  new Object(),        false},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Object(),        false},
-                { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
-                { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true},
-                { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Object(),        true}
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(),       BKException.Code.OK},
+                { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Counter(),        true},
+                { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  new Counter(),        true},
+                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE, new Counter(),        BKException.Code.NoSuchEntryException},
+                { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Counter(),        BKException.Code.BookieHandleNotAvailableException},
+                { ParamType.CLOSED_CONFIG,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE, new Counter(),        BKException.Code.ClientClosedException},
+                { ParamType.CLOSED_CONFIG,       ParamType.INVALID_INSTANCE,           ParamType.VALID_INSTANCE, new Counter(),        BKException.Code.ClientClosedException}
         }) ;
     }
 
@@ -190,20 +200,23 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
 
     @Test
-    public void test_ReadLac() {
+    public void test_ReadLacAfterWrite() {
 
         if (exceptionInConfigPhase)
             Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
                     " been thrown.", true);
         else {
             try {
+                ((Counter)this.ctx).inc();
+
                 bookieClientImpl.readLac(this.bookieId, this.ledgerId, this.readLacCallback, this.ctx);
 
-                while(bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0);
+                ((Counter)this.ctx).wait(0);
 
-                    ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
-                    verify(this.readLacCallback).readLacComplete(argument.capture(), isA(Long.class), isA(ByteBuf.class), isA(ByteBuf.class), isA(Object.class));
-                    Assert.assertEquals(this.expectedReadLac, argument.getValue());
+                ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
+                verify(this.readLacCallback).readLacComplete(argument.capture(), anyLong(), nullable(ByteBuf.class),
+                        nullable(ByteBuf.class), isA(Object.class));
+                Assert.assertEquals(this.expectedReadLac, argument.getValue());
 
             } catch (Exception e){
                 e.printStackTrace();
@@ -214,30 +227,77 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     }
 
 
-    public BookkeeperInternalCallbacks.WriteLacCallback mockWriteLacCallback(){
-        BookkeeperInternalCallbacks.WriteLacCallback cb = mock(BookkeeperInternalCallbacks.WriteLacCallback.class);
-        doNothing().when(cb).writeLacComplete(isA(Integer.class),isA(long.class),isA(BookieId.class),
-                isA(Object.class));
+    private BookkeeperInternalCallbacks.WriteLacCallback writeLacCallback(){
 
-        return cb;
+        return new BookkeeperInternalCallbacks.WriteLacCallback() {
+
+            @Override
+            public void writeLacComplete(int rc, long ledgerId, BookieId addr, Object ctx) {
+                BookieClientImplWriteThenReadLacTest.Counter counter = (BookieClientImplWriteThenReadLacTest.Counter) ctx;
+                counter.dec();
+                System.out.println("WRITE LAC: rc = " + rc + " for ledger: " + ledgerId + " at bookie: " + addr);
+            }
+
+
+
+        };
+
     }
 
-    public BookkeeperInternalCallbacks.ReadLacCallback mockReadLacCallback(){
-        BookkeeperInternalCallbacks.ReadLacCallback cb = mock(BookkeeperInternalCallbacks.ReadLacCallback.class);
-        doNothing().when(cb).readLacComplete(isA(Integer.class), isA(Long.class), isA(ByteBuf.class), isA(ByteBuf.class),
-                isA(Object.class));
+    private BookkeeperInternalCallbacks.ReadLacCallback readLacCallback(){
 
-        return cb;
+        return spy(new BookkeeperInternalCallbacks.ReadLacCallback() {
+
+            @Override
+            public void readLacComplete(int rc, long ledgerId, ByteBuf lac, ByteBuf buffer, Object ctx) {
+                Counter counter = (Counter) ctx;
+                counter.dec();
+                System.out.println("READ Lac: rc = " + rc  + "  ledger: " + ledgerId);
+            }
+
+
+
+        });
     }
 
-    public BookkeeperInternalCallbacks.WriteCallback mockWriteCallback(){
-        BookkeeperInternalCallbacks.WriteCallback cb = mock(BookkeeperInternalCallbacks.WriteCallback.class);
-        doNothing().when(cb).writeComplete(isA(Integer.class),isA(long.class),isA(long.class),isA(BookieId.class),
-                isA(Object.class));
+    private AsyncCallback.AddCallback addCallback(){
 
-        return cb;
+        return new AsyncCallback.AddCallback() {
+
+            @Override
+            public void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx) {
+                Counter counter = (Counter) ctx;
+                counter.dec();
+                System.out.println("ADD: rc = " + rc + " entry : " + entryId + " at ledger: " + lh.getId());
+            }
+
+
+        };
     }
 
+    private static class Counter {
+        int i;
+        int total;
 
+        synchronized void inc() {
+            i++;
+            total++;
+        }
+
+        synchronized void dec() {
+            i--;
+            notifyAll();
+        }
+
+        synchronized void wait(int limit) throws InterruptedException {
+            while (i > limit) {
+                wait();
+            }
+        }
+
+        synchronized int total() {
+            return total;
+        }
+    }
 
 }
