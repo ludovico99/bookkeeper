@@ -134,9 +134,7 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
     @After
     public void tear_down() throws Exception {
-
-        this.bcIsWritable.close();
-
+        
         for (int i=0 ; i< numBookies;i++) {
             serverByIndex(i).getBookie().shutdown();
             serverByIndex(i).shutdown();
