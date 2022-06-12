@@ -102,7 +102,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     }
 
     @Before
-    public void set_up() throws Exception {
+    public void set_up() {
         try {
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();

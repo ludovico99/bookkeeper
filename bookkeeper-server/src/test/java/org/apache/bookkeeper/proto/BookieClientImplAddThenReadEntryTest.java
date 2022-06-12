@@ -153,6 +153,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             BookieId bookieId = bookieServer.getBookieId();
 
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
+
             counter.inc();
             handle.asyncAddEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8),addCallback(),counter);
 
