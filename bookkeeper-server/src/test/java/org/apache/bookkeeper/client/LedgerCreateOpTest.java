@@ -2,21 +2,16 @@ package org.apache.bookkeeper.client;
 
 
 import org.apache.bookkeeper.client.api.WriteFlag;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
-import org.apache.bookkeeper.test.TestStatsProvider;
-import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 
 import static org.mockito.ArgumentMatchers.any;

@@ -1,7 +1,6 @@
 package org.apache.bookkeeper.proto;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -23,8 +22,6 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
-
-import java.awt.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -38,7 +35,6 @@ import static org.mockito.Mockito.*;
 public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestCase {
 
     private static Boolean exceptionInConfigPhase = false;
-    private static ClientConfiguration clientConf;
     private static BookieClientImpl bookieClientImpl;
 
 
@@ -112,7 +108,6 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     }
 
     private static void setBookieClientImpl() throws IOException {
-        clientConf = TestBKConfiguration.newClientConfiguration();
         bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
                 UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                 new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
@@ -150,7 +145,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
 
-            if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+            if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) bookieClientImpl.close();
 
         }catch (Exception e){
             exceptionInConfigPhase = true;

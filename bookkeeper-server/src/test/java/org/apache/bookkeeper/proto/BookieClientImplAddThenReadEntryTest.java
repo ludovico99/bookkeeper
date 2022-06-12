@@ -10,14 +10,12 @@ import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ByteBufList;
-import org.apache.bookkeeper.util.MathUtils;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -27,9 +25,8 @@ import org.mockito.ArgumentCaptor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+
 
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
@@ -39,7 +36,6 @@ import static org.mockito.Mockito.*;
 public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestCase {
 
     private static Boolean exceptionInConfigPhase = false;
-    private static ClientConfiguration clientConf;
     private static BookieClientImpl bookieClientImpl;
 
 
@@ -65,7 +61,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     }
 
     private static void setBookieClientImpl() throws IOException {
-        clientConf = TestBKConfiguration.newClientConfiguration();
         bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
                 UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                 new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
@@ -171,9 +166,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)){
                 this.ledgerId = handle.getLedgerMetadata().getLedgerId();
             }
-
-
-            if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+            if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) bookieClientImpl.close();
 
 
         }catch (Exception e){
@@ -261,14 +254,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
         BookkeeperInternalCallbacks.ReadEntryCallback cb = mock(BookkeeperInternalCallbacks.ReadEntryCallback.class);
         doNothing().when(cb).readEntryComplete(isA(Integer.class), isA(long.class),  isA(long.class),
                 isA(ByteBuf.class), isA(Object.class));
-
-        return cb;
-    }
-
-    public BookkeeperInternalCallbacks.WriteLacCallback mockWriteLacCallback(){
-        BookkeeperInternalCallbacks.WriteLacCallback cb = mock(BookkeeperInternalCallbacks.WriteLacCallback.class);
-        doNothing().when(cb).writeLacComplete(isA(Integer.class),isA(long.class),isA(BookieId.class),
-                isA(Object.class));
 
         return cb;
     }

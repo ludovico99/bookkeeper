@@ -120,7 +120,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
             for (int i = 0; i < nFaultyBookies; i++) {
 
-                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.confFaultyBookies, bcFaultyBookies,
+                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bcFaultyBookies,
                         serverByIndex(i).getBookieId(), 1);
 
                 pool.errorCounter.getAndSet((int) ++threshold);
