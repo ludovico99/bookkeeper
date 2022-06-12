@@ -7,13 +7,16 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.BookKeeper;
+import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
+import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
+import org.apache.bookkeeper.tls.SecurityProviderFactoryFactory;
 import org.apache.bookkeeper.util.ByteBufList;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
@@ -34,6 +37,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
     private static Boolean exceptionInConfigPhase = false;
     private static BookieClientImpl bookieClientImpl;
+    private static ClientConfiguration clientConf;
 
     //Test: getNumPendingRequests(BookieId address, long ledgerId)
     private Object expectedNumPendingRequests;
@@ -50,7 +54,8 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     }
 
     private static void setBookieClientImpl() throws IOException {
-        bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration(), new NioEventLoopGroup(),
+        clientConf = TestBKConfiguration.newClientConfiguration();
+        bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
                 UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                 new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                 BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
@@ -102,27 +107,34 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     public void set_up() throws Exception {
 
         BookieServer bookieServer = serverByIndex(0);
+        BookieId bookieId = bookieServer.getBookieId();
 
-        if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
+        if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
 
-        bookieServer.getBookie().getLedgerStorage().setMasterKey(0,
-                    "masterKey".getBytes(StandardCharsets.UTF_8));
+        LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
 
-        bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
+        bookieServer.getBookie().getLedgerStorage().setMasterKey(handle.getLedgerMetadata().getLedgerId(),
+                "masterKey".getBytes(StandardCharsets.UTF_8));
 
         DefaultPerChannelBookieClientPool pool = (DefaultPerChannelBookieClientPool) bookieClientImpl.
-                lookupClient(bookieServer.getBookieId());
+                lookupClient(bookieId);
 
-        spyDefaultPerChannelBookieClientPool(pool.clients[0]);
+        pool.clients[0] = spy(bookieClientImpl.create(bookieId,pool,
+                SecurityProviderFactoryFactory.getSecurityProviderFactory(clientConf.getTLSProviderFactoryClass()),false));
 
-        ByteBuf byteBuf = Unpooled.buffer("example".getBytes(StandardCharsets.UTF_8).length);
-        ByteBufList byteBufList = ByteBufList.get(byteBuf);
+        doNothing().when(pool.clients[0]).errorOut(isA(PerChannelBookieClient.CompletionKey.class));
+        doNothing().when(pool.clients[0]).errorOut(isA(PerChannelBookieClient.CompletionKey.class),isA(int.class));
+        doNothing().when(pool.clients[0]).checkTimeoutOnPendingOperations();
+        //Mi assicuro che nella concorrenza non siano rimossi
+
         EnumSet<WriteFlag> writeFlags = EnumSet.allOf(WriteFlag.class);
 
-
         for (long i = 0; i< numberPendingRequestToInsert; i++) {
-            pool.clients[0].addEntry(0L, bookieServer.getBookie().getLedgerStorage().readMasterKey(0L),
-                    0, byteBufList,mockWriteCallback(), new Object(), 0, false, writeFlags);
+
+            ByteBufList bufList = ByteBufList.get(Unpooled.wrappedBuffer("hello".getBytes(StandardCharsets.UTF_8)));
+
+            pool.clients[0].addEntry(handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                    i, bufList,mockWriteCallback(), new Object(), 0, false, writeFlags);
         }
 
     }
@@ -155,14 +167,11 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         for (int i=0 ; i< numBookies;i++) {
             serverByIndex(i).getBookie().shutdown();
             serverByIndex(i).shutdown();
+
         }
 
     }
 
-    @AfterClass
-    public static void closeAll(){
-        bookieClientImpl.close();
-    }
 
     @Test
     public void test_getNumPendingRequests() {
@@ -182,15 +191,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         }
     }
 
-    private void spyDefaultPerChannelBookieClientPool(PerChannelBookieClient client) {
-
-        client = spy(client);
-
-        doNothing().when(client).errorOut(any());
-        doNothing().when(client).errorOut(any(),anyInt());
-        doNothing().when(client).checkTimeoutOnPendingOperations();
-
-    }
 
     public BookkeeperInternalCallbacks.WriteCallback mockWriteCallback(){
         BookkeeperInternalCallbacks.WriteCallback cb = mock(BookkeeperInternalCallbacks.WriteCallback.class);
@@ -200,13 +200,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         return cb;
     }
 
-    public AsyncCallback.CreateCallback mockCreateCallback(){
-        AsyncCallback.CreateCallback cb = mock(AsyncCallback.CreateCallback.class);
-        doNothing().when(cb).createComplete(isA(Integer.class), any(),
-                isA(Object.class));
-
-        return cb;
-    }
 
 
 }
