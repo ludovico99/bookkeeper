@@ -432,10 +432,17 @@
             <version>${pitest.version}</version>
             <configuration>
               <targetClasses>
-                <param>org.apache.bookkeeper.proto.BookieClientImpl*</param>
+                <param>org.apache.bookkeeper.client.LedgerCreateOp*</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImpl*</param>
               </targetClasses>
               <targetTests>
-                <param>org.apache.bookkeeper.proto.BookieImplTest*</param>
+				  <param>org.apache.bookkeeper.client.LedgerCreateOpTest</param>
+                <param>org.apache.bookkeeper.proto.BookieClientImplAddThenReadEntryTest</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplGetFaultyBookiesTest</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplGetNumPendingRequestsTest</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplIsWritableTest</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplLookupClientTest</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplWriteThenReadLacTest</param>
                 
               </targetTests>
               <avoidCallsTo>
