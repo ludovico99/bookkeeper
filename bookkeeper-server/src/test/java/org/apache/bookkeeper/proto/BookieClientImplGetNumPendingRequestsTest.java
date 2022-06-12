@@ -103,36 +103,40 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
     @Before
     public void set_up() throws Exception {
+        try {
+            BookieServer bookieServer = serverByIndex(0);
+            BookieId bookieId = bookieServer.getBookieId();
 
-        BookieServer bookieServer = serverByIndex(0);
-        BookieId bookieId = bookieServer.getBookieId();
+            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
 
-        if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
+            LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32, "pippo".getBytes(StandardCharsets.UTF_8));
 
-        LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
+            bookieServer.getBookie().getLedgerStorage().setMasterKey(handle.getLedgerMetadata().getLedgerId(),
+                    "masterKey".getBytes(StandardCharsets.UTF_8));
 
-        bookieServer.getBookie().getLedgerStorage().setMasterKey(handle.getLedgerMetadata().getLedgerId(),
-                "masterKey".getBytes(StandardCharsets.UTF_8));
+            DefaultPerChannelBookieClientPool pool = (DefaultPerChannelBookieClientPool) bookieClientImpl.
+                    lookupClient(bookieId);
 
-        DefaultPerChannelBookieClientPool pool = (DefaultPerChannelBookieClientPool) bookieClientImpl.
-                lookupClient(bookieId);
+            pool.clients[0] = spy(bookieClientImpl.create(bookieId, pool,
+                    SecurityProviderFactoryFactory.getSecurityProviderFactory(clientConf.getTLSProviderFactoryClass()), false));
 
-        pool.clients[0] = spy(bookieClientImpl.create(bookieId,pool,
-                SecurityProviderFactoryFactory.getSecurityProviderFactory(clientConf.getTLSProviderFactoryClass()),false));
+            doNothing().when(pool.clients[0]).errorOut(isA(PerChannelBookieClient.CompletionKey.class));
+            doNothing().when(pool.clients[0]).errorOut(isA(PerChannelBookieClient.CompletionKey.class), isA(int.class));
+            doNothing().when(pool.clients[0]).checkTimeoutOnPendingOperations();
+            //Mi assicuro che nella concorrenza non siano rimossi
 
-        doNothing().when(pool.clients[0]).errorOut(isA(PerChannelBookieClient.CompletionKey.class));
-        doNothing().when(pool.clients[0]).errorOut(isA(PerChannelBookieClient.CompletionKey.class),isA(int.class));
-        doNothing().when(pool.clients[0]).checkTimeoutOnPendingOperations();
-        //Mi assicuro che nella concorrenza non siano rimossi
+            EnumSet<WriteFlag> writeFlags = EnumSet.allOf(WriteFlag.class);
 
-        EnumSet<WriteFlag> writeFlags = EnumSet.allOf(WriteFlag.class);
+            for (long i = 0; i < numberPendingRequestToInsert; i++) {
 
-        for (long i = 0; i< numberPendingRequestToInsert; i++) {
+                ByteBufList bufList = ByteBufList.get(Unpooled.wrappedBuffer("hello".getBytes(StandardCharsets.UTF_8)));
 
-            ByteBufList bufList = ByteBufList.get(Unpooled.wrappedBuffer("hello".getBytes(StandardCharsets.UTF_8)));
-
-            pool.clients[0].addEntry(handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    i, bufList,mockWriteCallback(), new Object(), 0, false, writeFlags);
+                pool.clients[0].addEntry(handle.getLedgerMetadata().getLedgerId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                        i, bufList, mockWriteCallback(), new Object(), 0, false, writeFlags);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            //exceptionInConfigPhase = false;
         }
 
     }

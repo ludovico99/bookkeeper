@@ -131,13 +131,13 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                     {ParamType.INVALID_INSTANCE, ParamType.CLOSED_CONFIG,        null},
                     {ParamType.VALID_INSTANCE, ParamType.INVALID_CONFIG,        pool2},
                     {ParamType.INVALID_INSTANCE, ParamType.INVALID_CONFIG, new IllegalArgumentException()},
-                    {ParamType.NULL_INSTANCE, ParamType.VALID_CONFIG, new NullPointerException()}
+                    {ParamType.NULL_INSTANCE, ParamType.VALID_CONFIG,      new NullPointerException()}
 
             });
 
         } catch (Exception e) {
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+           //exceptionInConfigPhase = true;
         }
 
         return null;

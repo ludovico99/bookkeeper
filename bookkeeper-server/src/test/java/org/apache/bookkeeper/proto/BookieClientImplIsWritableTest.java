@@ -93,26 +93,32 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
 
     @Before
-    public void set_up() throws Exception {
+    public void set_up() {
 
-        if(!bookieIdParamType.equals(ParamType.NULL_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
+        try {
 
-
-        if(bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) {
-
-            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(),bcIsWritable,this.bookieId,1);
-            pool.clients[0].setWritable(false);
-
-            bcIsWritable.channels.put(this.bookieId,pool);
-        }
-
-        if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
+            if (!bookieIdParamType.equals(ParamType.NULL_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
 
 
-            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(),bcIsWritable,this.bookieId,1);
+            if (bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) {
 
-            bcIsWritable.channels.put(this.bookieId,pool);
+                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
+                pool.clients[0].setWritable(false);
 
+                bcIsWritable.channels.put(this.bookieId, pool);
+            }
+
+            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) {
+
+
+                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
+
+                bcIsWritable.channels.put(this.bookieId, pool);
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -154,6 +160,7 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
             if (expectedNullPointerEx || expectedIllegalArgumentException) {
                 try {
                     bcIsWritable.isWritable(this.bookieId, this.key);
+                    Assert.fail("Test case failed");
                 } catch (NullPointerException  | IllegalArgumentException e) {
                     Assert.assertEquals("Exception that i expect was raised", this.expectedIsWritable.getClass(), e.getClass());
                 }
