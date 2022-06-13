@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 
 
-public class LedgerCreateOpTest extends BookKeeperClusterTestCase {
+public class LedgerCreateOpTests extends BookKeeperClusterTestCase {
 
     private Object expectedException;
     private Integer ensembleSize;
@@ -30,7 +30,7 @@ public class LedgerCreateOpTest extends BookKeeperClusterTestCase {
     private Integer ackQuorumSize;
     private SyncCallbackUtils.SyncCreateCallback cb;
 
-    public LedgerCreateOpTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize,ParamType cb, Object expectedException) {
+    public LedgerCreateOpTests(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, Object expectedException) {
         super(3);
         configureInitiate(ensembleSize, writeQuorumSize, ackQuorumSize, cb, expectedException);
     }
@@ -203,7 +203,7 @@ public class LedgerCreateOpTest extends BookKeeperClusterTestCase {
 
             try {
                 BookKeeper bookkeeper = this.bkc;
-                org.apache.bookkeeper.client.LedgerCreateOpTest.Counter counter = new org.apache.bookkeeper.client.LedgerCreateOpTest.Counter();
+                LedgerCreateOpTests.Counter counter = new LedgerCreateOpTests.Counter();
                 LedgerCreateOp ledgerCreateOp = new LedgerCreateOp(bookkeeper, ensembleSize, writeQuorumSize, ackQuorumSize, BookKeeper.DigestType.CRC32,
                         "pwd".getBytes(StandardCharsets.UTF_8), this.cb, counter, null, EnumSet.allOf(WriteFlag.class), bookkeeper.getClientCtx().getClientStats());
 

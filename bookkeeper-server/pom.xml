@@ -436,7 +436,7 @@
 				<param>org.apache.bookkeeper.proto.BookieClientImpl*</param>
               </targetClasses>
               <targetTests>
-				  <param>org.apache.bookkeeper.client.LedgerCreateOpTest</param>
+				  <param>org.apache.bookkeeper.client.LedgerCreateOpTests*</param>
                 <param>org.apache.bookkeeper.proto.BookieClientImplAddThenReadEntryTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplGetFaultyBookiesTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplGetNumPendingRequestsTest</param>
