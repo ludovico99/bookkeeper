@@ -94,7 +94,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 break;
 
             case INVALID_INSTANCE:
-                this.ledgerId = -1L;
+                this.ledgerId = -5L;
                 break;
 
         }

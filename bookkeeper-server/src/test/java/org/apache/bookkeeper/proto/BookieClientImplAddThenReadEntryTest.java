@@ -121,7 +121,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                 break;
 
             case INVALID_INSTANCE:
-                this.entryId = -1L;
+                this.entryId = -5L;
                 break;
 
         }
