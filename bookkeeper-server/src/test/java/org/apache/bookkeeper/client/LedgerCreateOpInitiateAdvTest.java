@@ -13,7 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -27,7 +26,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     private Integer writeQuorumSize;
     private Integer ackQuorumSize;
     private Long ledgerId;
-    private SyncCallbackUtils.SyncCreateCallback cb;
+    private AsyncCallback.CreateCallback cb;
 
     public LedgerCreateOpInitiateAdvTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, Object expectedException) {
         super(3);
@@ -115,9 +114,9 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     }
 
 
-    private static SyncCallbackUtils.SyncCreateCallback createCallback() {
+    public static AsyncCallback.CreateCallback createCallback() {
 
-        return spy(new SyncCallbackUtils.SyncCreateCallback(new CompletableFuture<>()) {
+        return spy(new AsyncCallback.CreateCallback () {
 
             @Override
             public void createComplete(int rc, LedgerHandle lh, Object ctx) {

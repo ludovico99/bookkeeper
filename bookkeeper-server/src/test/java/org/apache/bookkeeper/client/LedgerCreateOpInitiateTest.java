@@ -27,7 +27,7 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
     private Integer ensembleSize;
     private Integer writeQuorumSize;
     private Integer ackQuorumSize;
-    private SyncCallbackUtils.SyncCreateCallback cb;
+    private AsyncCallback.CreateCallback cb;
 
 
 
@@ -111,9 +111,9 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
         }
 
-    private static SyncCallbackUtils.SyncCreateCallback createCallback() {
+    public static AsyncCallback.CreateCallback createCallback() {
 
-        return spy(new SyncCallbackUtils.SyncCreateCallback(new CompletableFuture<>()) {
+        return spy(new AsyncCallback.CreateCallback() {
 
             @Override
             public void createComplete(int rc, LedgerHandle lh, Object ctx) {
