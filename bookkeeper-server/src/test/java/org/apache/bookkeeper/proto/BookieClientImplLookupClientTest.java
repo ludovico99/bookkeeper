@@ -27,10 +27,8 @@ import java.util.concurrent.Executors;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase {
 
-    private static Boolean exceptionInConfigPhase = false;
-    private static final ClientConfiguration confLookup = TestBKConfiguration.newClientConfiguration();
-    private static BookieClientImpl validConfig;
-    private static BookieClientImpl invalidConfig;
+    private  Boolean exceptionInConfigPhase = false;
+    private  ClientConfiguration confLookup;
 
     //Test: isWritable(BookieId address, long key)
     private BookieClientImpl bookieClient;
@@ -40,108 +38,127 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
     private Boolean expectedIllegalArgumentException = false;
 
 
-    public BookieClientImplLookupClientTest(ParamType BookieId, ParamType bookieClient, Object isWritable) {
+    public BookieClientImplLookupClientTest(ParamType BookieId, ParamType bookieClient) {
         super(1);
-        configureLookupClient(BookieId, bookieClient, isWritable);
+        configureLookupClient(BookieId, bookieClient);
 
 
     }
 
-    public static void setValidConfig() throws IOException {
+    private void configureLookupClient(ParamType bookieId, ParamType bookieClient) {
 
-        validConfig = new BookieClientImpl(confLookup, new NioEventLoopGroup(),
-                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+       try {
+           ClientConfiguration confLookupValid=TestBKConfiguration.newClientConfiguration();
+           ClientConfiguration confLookupInvalid=TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(0);
 
-    }
+           BookieClientImpl validConfig = new BookieClientImpl(confLookupValid, new NioEventLoopGroup(),
+                   UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                   new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                   BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-    public static void setInvalidConfig() throws IOException {
-        confLookup.setNumChannelsPerBookie(0);
+           BookieClientImpl invalidConfig = new BookieClientImpl(confLookupInvalid, new NioEventLoopGroup(),
+                   UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                   new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                   BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-        invalidConfig = new BookieClientImpl(confLookup, new NioEventLoopGroup(),
-                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+           PerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confLookupValid, validConfig,
+                   BookieId.parse("Bookie-1"), 1);
 
-    }
+           validConfig.channels.put(BookieId.parse("Bookie-1"), pool);
 
-    private void configureLookupClient(ParamType bookieId, ParamType bookieClient, Object expected) {
-        this.expectedLookupClient = expected;
+           PerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(confLookupInvalid, invalidConfig,
+                   BookieId.parse("Bookie-1"), 1);
 
-        switch (bookieId) {
-            case VALID_INSTANCE:
-                this.bookieId = BookieId.parse("Bookie-1");
-                break;
+           invalidConfig.channels.put(BookieId.parse("Bookie-1"), pool2);
 
-            case INVALID_INSTANCE:
-                this.bookieId = BookieId.parse("Bookie-2");
-                break;
+           switch (bookieId) {
+               case VALID_INSTANCE:
+                   this.bookieId = BookieId.parse("Bookie-1");
+                   switch (bookieClient) {
+                       case VALID_CONFIG:
+                           this.expectedLookupClient = pool;
+                           this.bookieClient = validConfig;
+                           break;
+                       case INVALID_CONFIG:
+                           this.expectedLookupClient = pool2;
+                           this.bookieClient = invalidConfig;
+                           break;
+                       case CLOSED_CONFIG:
+                           this.expectedLookupClient = null;
+                           validConfig.close();
+                           this.bookieClient = validConfig;
+                   }
+                   break;
 
-            case NULL_INSTANCE:
-                this.bookieId = null;
-                this.expectedNullPointerEx = true;
-                break;
+               case INVALID_INSTANCE:
+                   this.bookieId = BookieId.parse("Bookie-2");
+                   switch (bookieClient) {
+                       case VALID_CONFIG:
+                           this.expectedLookupClient = new DefaultPerChannelBookieClientPool(confLookupValid, validConfig,
+                                   BookieId.parse("Bookie-2"), 1);
+                           this.bookieClient = validConfig;
+                           break;
+                       case INVALID_CONFIG:
+                           this.expectedLookupClient = new IllegalArgumentException();
+                           this.expectedIllegalArgumentException = true;
+                           this.bookieClient = invalidConfig;
+                           break;
+                       case CLOSED_CONFIG:
+                           this.expectedLookupClient = null;
+                           validConfig.close();
+                           this.bookieClient = validConfig;
+                           break;
+                   }
 
-        }
+               case NULL_INSTANCE:
+                   this.bookieId = null;
+                   this.expectedNullPointerEx = true;
+                   this.expectedLookupClient = new NullPointerException();
+                   switch (bookieClient) {
+                       case VALID_CONFIG:
+                           this.bookieClient = validConfig;
+                           break;
+                       case INVALID_CONFIG:
+                           this.bookieClient = invalidConfig;
+                           break;
+                       case CLOSED_CONFIG:
+                           validConfig.close();
+                           this.bookieClient = validConfig;
+                   }
+                   break;
+           }
 
-        switch (bookieClient) {
-            case VALID_CONFIG:
-                this.bookieClient = validConfig;
-                break;
 
-            case INVALID_CONFIG:
-                this.bookieClient = invalidConfig;
-                if (bookieId.equals(ParamType.INVALID_INSTANCE))
-                    this.expectedIllegalArgumentException = true;
-                break;
-
-            case CLOSED_CONFIG:
-                validConfig.close();
-                this.bookieClient = validConfig;
-                break;
-        }
+       }catch (Exception e){
+           e.printStackTrace();
+           //this.exceptionInConfigPhase = true;
+       }
 
     }
 
 
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() {
-        try {
-            setValidConfig();
-
-            setInvalidConfig();
-
-
-            PerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confLookup, validConfig,
-                    BookieId.parse("Bookie-1"), 1);
-
-            validConfig.channels.put(BookieId.parse("Bookie-1"), pool);
-
-            PerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(confLookup, invalidConfig,
-                    BookieId.parse("Bookie-1"), 1);
-
-            invalidConfig.channels.put(BookieId.parse("Bookie-1"), pool2);
+        return Arrays.asList(new Object[][]{
+                //BookieId,                  Class Config,
+                {ParamType.VALID_INSTANCE, ParamType.VALID_CONFIG},
+                {ParamType.VALID_INSTANCE, ParamType.INVALID_CONFIG},
+                {ParamType.VALID_INSTANCE, ParamType.CLOSED_CONFIG},
+                {ParamType.INVALID_INSTANCE, ParamType.VALID_CONFIG},
+                {ParamType.INVALID_INSTANCE, ParamType.INVALID_CONFIG},
+                {ParamType.INVALID_INSTANCE, ParamType.CLOSED_CONFIG},
+                {ParamType.NULL_INSTANCE, ParamType.VALID_CONFIG},
+                {ParamType.NULL_INSTANCE, ParamType.INVALID_CONFIG},
+                {ParamType.NULL_INSTANCE, ParamType.CLOSED_CONFIG}
 
 
-            return Arrays.asList(new Object[][]{
-                    //BookieId,                  Class Config,              ExpectedValue
-                    {ParamType.VALID_INSTANCE, ParamType.VALID_CONFIG,          pool},
-                    //{ParamType.INVALID_INSTANCE, ParamType.VALID_CONFIG,        pool},
-                    {ParamType.INVALID_INSTANCE, ParamType.CLOSED_CONFIG,        null},
-                    {ParamType.VALID_INSTANCE, ParamType.INVALID_CONFIG,        pool2},
-                    {ParamType.INVALID_INSTANCE, ParamType.INVALID_CONFIG, new IllegalArgumentException()},
-                    {ParamType.NULL_INSTANCE, ParamType.VALID_CONFIG,      new NullPointerException()}
 
-            });
 
-        } catch (Exception e) {
-            e.printStackTrace();
-           //exceptionInConfigPhase = true;
-        }
-
-        return null;
+        });
     }
+
+
+
 
     @After
     public void tear_down() throws Exception {
@@ -152,14 +169,6 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
 
         }
     }
-
-    @AfterClass
-    public static void closeAll(){
-        validConfig.close();
-        invalidConfig.close();
-    }
-
-
 
 
 

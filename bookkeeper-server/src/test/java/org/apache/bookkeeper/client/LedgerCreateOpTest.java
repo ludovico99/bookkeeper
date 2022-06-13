@@ -5,6 +5,7 @@ import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,6 +21,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
 @RunWith(value = Parameterized.class)
+@Ignore
 
 public class LedgerCreateOpTest extends BookKeeperClusterTestCase {
 
@@ -56,20 +58,20 @@ public class LedgerCreateOpTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(new Object[][]{
                 //Totale bookies = 3
-                //ensembleSize,       writeQuorumSize,     ackQuorumSize     CB                        Exception
-//                {2,                             2,                  2,  ParamType.VALID_INSTANCE,             BKException.Code.OK},
-//                {3,                             2,                  2,  ParamType.VALID_INSTANCE,             BKException.Code.OK},
-//                {3,                             1,                  1,  ParamType.VALID_INSTANCE,             BKException.Code.OK},
-                {1,                             2,                  2,  ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
-                {3,                             4,                  2,  ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
-                {11,                            10,                 2,  ParamType.VALID_INSTANCE,             BKException.Code.NotEnoughBookiesException},
-                {3,                             4,                  5,  ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
-                {3,                             2,                  3,  ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
-                {3,                             4,                  2,  ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
-                {10,                            5,                  2,  ParamType.VALID_INSTANCE,             BKException.Code.NotEnoughBookiesException},
-                {null,                          1,                  1,  ParamType.VALID_INSTANCE,             new NullPointerException()},
-                {3,                             null,               1,  ParamType.VALID_INSTANCE,             new NullPointerException()},
-                {3,                             1,               null,  ParamType.VALID_INSTANCE,             new NullPointerException()}
+                //ensembleSize,       writeQuorumSize,     ackQuorumSize        CB                                 Exception
+                {2,                           2,                  2,      ParamType.VALID_INSTANCE,             BKException.Code.OK},
+                {3,                           2,                  2,      ParamType.VALID_INSTANCE,             BKException.Code.OK},
+                {3,                           1,                  1,      ParamType.VALID_INSTANCE,             BKException.Code.OK},
+                {1,                           2,                  2,      ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
+                {3,                           4,                  2,      ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
+                {11,                          10,                 2,      ParamType.VALID_INSTANCE,             BKException.Code.NotEnoughBookiesException},
+                {3,                           4,                  5,      ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
+                {3,                           2,                  3,      ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
+                {3,                           4,                  2,      ParamType.VALID_INSTANCE,             BKException.Code.ZKException},
+                {10,                          5,                  2,      ParamType.VALID_INSTANCE,             BKException.Code.NotEnoughBookiesException},
+                {null,                        1,                  1,      ParamType.VALID_INSTANCE,             new NullPointerException()},
+                {3,                           null,               1,      ParamType.VALID_INSTANCE,             new NullPointerException()},
+                {3,                           1,               null,      ParamType.VALID_INSTANCE,             new NullPointerException()}
 
 
         });

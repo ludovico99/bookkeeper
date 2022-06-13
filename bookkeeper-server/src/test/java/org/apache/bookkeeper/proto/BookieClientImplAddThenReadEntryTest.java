@@ -49,6 +49,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     private Long ledgerId;
     private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
+    private ParamType entryIdIdParamType;
     private BookieId bookieId;
     private Long entryId;
 
@@ -71,10 +72,12 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     private void configureAddThenRead(ParamType bookieId, ParamType ledgerId, ParamType entryId, ParamType cb, Object ctx, int flags, Object expectedReadLac) {
 
         this.bookieIdParamType = bookieId;
+        this.ledgerIdParamType = ledgerId;
+        this.entryIdIdParamType = entryId;
         this.ctx = ctx;
         this.flags = flags;
         this.expectedRead = expectedReadLac;
-        this.ledgerIdParamType = ledgerId;
+
 
 
         switch (bookieId){
@@ -111,7 +114,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         switch (entryId){
             case VALID_INSTANCE:
-                this.entryId = 0L;
                 break;
 
             case NULL_INSTANCE:
@@ -147,40 +149,30 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         try {
 
-            Counter counter = new Counter();
-
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
-
-            counter.inc();
-            handle.asyncAddEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8),addCallback(),counter);
-
-            counter.wait(0);
+            //Sincrona
+            long entryId = handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
-            counter = new Counter();
-
+            Counter counter = new Counter();;
             counter.inc();
+
             ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
             ByteBufList byteBufList = ByteBufList.get(byteBuf);
             bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    0L, byteBufList , writeCallback(), counter, BookieProtocol.ADDENTRY,false, EnumSet.allOf(WriteFlag.class));
+                    entryId, byteBufList , writeCallback(), counter, BookieProtocol.ADDENTRY,false, EnumSet.allOf(WriteFlag.class));
 
             counter.wait(0);
 
-            if(bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
-                this.bookieId = bookieId;
-            }
-            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)){
-                this.ledgerId = handle.getId();
-            }
-
-
+            if(bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
+            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
+            if (entryIdIdParamType.equals(ParamType.VALID_INSTANCE)) this.entryId = entryId;
             if(this.bookieIdParamType.equals(ParamType.CLOSED_CONFIG)) bookieClientImpl.close();
 
 

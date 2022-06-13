@@ -110,7 +110,6 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
             if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) {
 
-
                 DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
 
                 bcIsWritable.channels.put(this.bookieId, pool);
@@ -128,7 +127,7 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //BookieId,                     key,  ExpectedValue
+                //BookieId,                     key,     Expected exception
                 {ParamType.VALID_INSTANCE,     -1L,         true},
                 {ParamType.INVALID_INSTANCE,   -1L,         false},
                 {ParamType.CLOSED_CONFIG,      -1L,         true},
