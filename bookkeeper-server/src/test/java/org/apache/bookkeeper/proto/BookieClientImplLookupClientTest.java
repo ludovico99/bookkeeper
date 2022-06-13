@@ -151,9 +151,6 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                 {ParamType.NULL_INSTANCE, ParamType.INVALID_CONFIG},
                 {ParamType.NULL_INSTANCE, ParamType.CLOSED_CONFIG}
 
-
-
-
         });
     }
 
