@@ -55,6 +55,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     private ClientConfType clientConfTypeEnum;
     private BookieId bookieId;
     private Long entryId;
+    private int lastRC = -1;
 
 
 
@@ -141,7 +142,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             }
         }catch (Exception e){
             e.printStackTrace();
-            //exceptionInConfigPhase = true
+            exceptionInConfigPhase = true;
         }
 
 
@@ -168,12 +169,17 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             Counter counter = new Counter();;
             counter.inc();
 
-            ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
-            ByteBufList byteBufList = ByteBufList.get(byteBuf);
-            bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    entryId, byteBufList , writeCallback(), counter, BookieProtocol.ADDENTRY,false, EnumSet.allOf(WriteFlag.class));
 
-            counter.wait(0);
+            while(this.lastRC != 0) {
+
+                ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
+                ByteBufList byteBufList = ByteBufList.get(byteBuf);
+
+                bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                        0L, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
+
+                counter.wait(0);
+            }
 
             if(bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
@@ -193,12 +199,12 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                    //Bookie_ID                   Ledger_id                   Entry_id                         ReadEntryCallback           Object                 Flags           ClientConf           Raise exception
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF, BKException.Code.OK},
-                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,   BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,    BKException.Code.NoSuchLedgerExistsException},
-               // {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY,ClientConf.STD_CONF     BKException.Code.TimeoutException},
-                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,    true},
+                    //Bookie_ID                   Ledger_id                   Entry_id                         ReadEntryCallback           Object                 Flags           ClientConf                        Raise exception
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
+                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.NoSuchLedgerExistsException},
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.TimeoutException},
+                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,     ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,      true},
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
@@ -252,6 +258,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
         return (rc, ledger, entry, addr, ctx1) -> {
             Counter counter = (Counter) ctx1;
             counter.dec();
+            this.lastRC = rc;
             System.out.println("WRITE: rc = " + rc + " for entry: " + entry + " at ledger: " +
                     ledger + " at bookie: " + addr );
 
@@ -271,19 +278,19 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
         });
     }
 
-    private AsyncCallback.AddCallback addCallback(){
-
-        return new AsyncCallback.AddCallback() {
-
-            @Override
-            public void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx) {
-                Counter counter = (Counter) ctx;
-                counter.dec();
-                System.out.println("ADD: rc = " + rc + " entry : " + entryId + " at ledger: " + lh.getId());
-            }
-
-        };
-    }
+//    private AsyncCallback.AddCallback addCallback(){
+//
+//        return new AsyncCallback.AddCallback() {
+//
+//            @Override
+//            public void addComplete(int rc, LedgerHandle lh, long entryId, Object ctx) {
+//                Counter counter = (Counter) ctx;
+//                counter.dec();
+//                System.out.println("ADD: rc = " + rc + " entry : " + entryId + " at ledger: " + lh.getId());
+//            }
+//
+//        };
+//    }
 
 
 }
