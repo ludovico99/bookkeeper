@@ -1,6 +1,14 @@
 package org.apache.bookkeeper.client;
 
-public interface MyCallback extends AsyncCallback.CreateCallback{
+import org.apache.bookkeeper.util.Counter;
 
-    void createComplete(int rc, LedgerHandle lh, Object ctx);
+public class MyCallback implements AsyncCallback.CreateCallback {
+
+    @Override
+    public void createComplete(int rc, LedgerHandle lh, Object ctx) {
+        Counter counter = (Counter) ctx;
+        counter.dec();
+        System.out.println("Create complete: rc = " + rc + " counter value: " + counter.i);
+    }
 }
+

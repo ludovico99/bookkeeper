@@ -50,7 +50,7 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
             switch (cb) {
                 case VALID_INSTANCE:
-                    this.cb = createCallback();
+                    this.cb = spy(MyCallback.class);
                     break;
                 case NULL_INSTANCE:
                     this.cb = null;
@@ -136,19 +136,6 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
         }
 
-    public static AsyncCallback.CreateCallback createCallback() {
-
-        return spy(new MyCallback() {
-
-            @Override
-            public void createComplete(int rc, LedgerHandle lh, Object ctx) {
-                Counter counter = (Counter) ctx;
-                counter.dec();
-                System.out.println("Create complete: rc = " + rc + " counter value: " + counter.i);
-            }
-
-        });
-    }
 
 }
 
