@@ -10,15 +10,14 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
+import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -32,20 +31,22 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
 
     //Test: isWritable(BookieId address, long key)
     private BookieClientImpl bookieClient;
+    private ClientConfType clientConfType;
     private BookieId bookieId;
     private Object expectedLookupClient;
     private Boolean expectedNullPointerEx = false;
     private Boolean expectedIllegalArgumentException = false;
 
 
-    public BookieClientImplLookupClientTest(ParamType BookieId, ParamType bookieClient) {
+    public BookieClientImplLookupClientTest(ParamType BookieId, ClientConfType bookieClient) {
         super(1);
         configureLookupClient(BookieId, bookieClient);
 
 
     }
 
-    private void configureLookupClient(ParamType bookieId, ParamType bookieClient) {
+    private void configureLookupClient(ParamType bookieId, ClientConfType bookieClient) {
+
 
        try {
            ClientConfiguration confLookupValid=TestBKConfiguration.newClientConfiguration();
@@ -75,7 +76,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                case VALID_INSTANCE:
                    this.bookieId = BookieId.parse("Bookie-1");
                    switch (bookieClient) {
-                       case VALID_CONFIG:
+                       case STD_CONF:
                            this.expectedLookupClient = pool;
                            this.bookieClient = validConfig;
                            break;
@@ -93,7 +94,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                case INVALID_INSTANCE:
                    this.bookieId = BookieId.parse("Bookie-2");
                    switch (bookieClient) {
-                       case VALID_CONFIG:
+                       case STD_CONF:
                            this.expectedLookupClient = new DefaultPerChannelBookieClientPool(confLookupValid, validConfig,
                                    BookieId.parse("Bookie-2"), 1);
                            this.bookieClient = validConfig;
@@ -115,7 +116,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                    this.expectedNullPointerEx = true;
                    this.expectedLookupClient = new NullPointerException();
                    switch (bookieClient) {
-                       case VALID_CONFIG:
+                       case STD_CONF:
                            this.bookieClient = validConfig;
                            break;
                        case INVALID_CONFIG:
@@ -131,7 +132,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
 
        }catch (Exception e){
            e.printStackTrace();
-           //this.exceptionInConfigPhase = true;
+           this.exceptionInConfigPhase = true;
        }
 
     }
@@ -141,15 +142,15 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(new Object[][]{
                 //BookieId,                  Class Config,
-                {ParamType.VALID_INSTANCE, ParamType.VALID_CONFIG},
-                {ParamType.VALID_INSTANCE, ParamType.INVALID_CONFIG},
-                {ParamType.VALID_INSTANCE, ParamType.CLOSED_CONFIG},
-                {ParamType.INVALID_INSTANCE, ParamType.VALID_CONFIG},
-                {ParamType.INVALID_INSTANCE, ParamType.INVALID_CONFIG},
-                {ParamType.INVALID_INSTANCE, ParamType.CLOSED_CONFIG},
-                {ParamType.NULL_INSTANCE, ParamType.VALID_CONFIG},
-                {ParamType.NULL_INSTANCE, ParamType.INVALID_CONFIG},
-                {ParamType.NULL_INSTANCE, ParamType.CLOSED_CONFIG}
+                {ParamType.VALID_INSTANCE, ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE, ClientConfType.INVALID_CONFIG},
+                {ParamType.VALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
+                {ParamType.INVALID_INSTANCE, ClientConfType.STD_CONF},
+                {ParamType.INVALID_INSTANCE, ClientConfType.INVALID_CONFIG},
+                {ParamType.INVALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
+                {ParamType.NULL_INSTANCE, ClientConfType.STD_CONF},
+                {ParamType.NULL_INSTANCE, ClientConfType.INVALID_CONFIG},
+                {ParamType.NULL_INSTANCE, ClientConfType.CLOSED_CONFIG}
 
         });
     }

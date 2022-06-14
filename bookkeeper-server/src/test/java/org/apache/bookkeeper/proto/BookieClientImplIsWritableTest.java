@@ -10,6 +10,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
+import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -36,15 +37,15 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     private Boolean expectedIllegalArgumentException = false;
 
 
-    public BookieClientImplIsWritableTest(ParamType BookieId, long key, Object isWritable) {
+    public BookieClientImplIsWritableTest(ParamType BookieId, long key,ClientConfType clientConfType, Object isWritable) {
         super(1);
 
-        configureIsWritable(BookieId, key,isWritable);
+        configureIsWritable(BookieId, key,clientConfType,isWritable);
 
 
     }
 
-    private void configureIsWritable(ParamType enumType,long key, Object expected) {
+    private void configureIsWritable(ParamType enumType,long key,ClientConfType clientConfType, Object expected) {
         this.key = key;
         this.expectedIsWritable = expected;
         this.bookieIdParamType = enumType;
@@ -56,12 +57,6 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
             switch (enumType) {
                 case VALID_INSTANCE:
                 case INVALID_INSTANCE:
-                    this.expectedIsWritable = expected;
-                    break;
-
-                case INVALID_CONFIG:
-                    confIsWritable.setNumChannelsPerBookie(0);
-                    this.expectedIllegalArgumentException = true;
                     this.expectedIsWritable = expected;
                     break;
 
@@ -78,14 +73,26 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-            if (enumType.equals(ParamType.CLOSED_CONFIG)) {
+            switch (clientConfType) {
+                case STD_CONF:
+                    break;
+
+                case CLOSED_CONFIG:
                     this.bcIsWritable.close();
                     this.expectedIsWritable = expected;
+                    break;
+
+                case INVALID_CONFIG:
+                    confIsWritable.setNumChannelsPerBookie(0);
+                    this.expectedIllegalArgumentException = true;
+                    this.expectedIsWritable = expected;
+                    break;
+
             }
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = false;
+            //exceptionInConfigPhase = true;
         }
 
     }
@@ -115,9 +122,10 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
                 bcIsWritable.channels.put(this.bookieId, pool);
 
             }
+
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -127,12 +135,12 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //BookieId,                     key,     Expected exception
-                {ParamType.VALID_INSTANCE,     -1L,         true},
-                {ParamType.INVALID_INSTANCE,   -1L,         false},
-                {ParamType.CLOSED_CONFIG,      -1L,         true},
-                {ParamType.INVALID_CONFIG,      2L,         new IllegalArgumentException()},
-                {ParamType.NULL_INSTANCE,       1L,         new NullPointerException()}
+                //BookieId,                     key,     ClientConf                   Expected exception/value
+                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.STD_CONF,                true},
+                {ParamType.INVALID_INSTANCE,   -1L, ClientConfType.STD_CONF,                false},
+                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.CLOSED_CONFIG,           true},
+                {ParamType.VALID_INSTANCE,      2L, ClientConfType.CLOSED_CONFIG,           true},
+                {ParamType.NULL_INSTANCE,       1L, ClientConfType.STD_CONF,                new NullPointerException()}
 
         }) ;
     }

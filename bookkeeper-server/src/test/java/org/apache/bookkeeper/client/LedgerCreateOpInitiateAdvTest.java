@@ -2,8 +2,11 @@ package org.apache.bookkeeper.client;
 
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
+import org.apache.bookkeeper.util.ClientConfType;
+import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -27,15 +30,16 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     private Integer ackQuorumSize;
     private Long ledgerId;
     private AsyncCallback.CreateCallback cb;
+    private ClientConfType clientConfType;
 
-    public LedgerCreateOpInitiateAdvTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, Object expectedException) {
+    public LedgerCreateOpInitiateAdvTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedException) {
         super(3);
-        configureInitiateAdv(ensembleSize, writeQuorumSize, ackQuorumSize, ledgerId, cb, expectedException);
+        configureInitiateAdv(ensembleSize, writeQuorumSize, ackQuorumSize, ledgerId, cb,clientConfType, expectedException);
     }
 
 
-    private void configureInitiateAdv(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, Object expectedException) {
-
+    private void configureInitiateAdv(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedException) {
+        this.clientConfType = clientConfType;
         this.expectedException = expectedException;
         this.ensembleSize = ensembleSize;
         this.writeQuorumSize = writeQuorumSize;
@@ -57,28 +61,52 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(new Object[][]{
                 //Totale bookies = 3
-                //ensembleSize,       writeQuorumSize,     ackQuorumSize    ledgerId             CB                                 Exception
-                {2, 2, 2, 0L, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                {3, 2, 2, 0L, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                {3, 1, 1, 0L, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                {1, 2, 2, 0L, ParamType.VALID_INSTANCE, true},
-                {3, 4, 2, 0L, ParamType.VALID_INSTANCE, true},
-                {11, 10, 2, 0L, ParamType.VALID_INSTANCE, BKException.Code.NotEnoughBookiesException},
-                {3, 4, 5, 0L, ParamType.VALID_INSTANCE, true},
-                {3, 2, 3, 0L, ParamType.VALID_INSTANCE, true},
-                {3, 4, 2, 0L, ParamType.VALID_INSTANCE, true},
-                {10, 5, 2, 0L, ParamType.VALID_INSTANCE, BKException.Code.NotEnoughBookiesException},
-                {null, 1, 1, 0L, ParamType.VALID_INSTANCE, true},
-                {3, null, 1, 0L, ParamType.VALID_INSTANCE, true},
-                {3, 2, null, 0L, ParamType.VALID_INSTANCE, true},
-                {3, 2, 1, -1L, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                {3, 2, 1, -2L, ParamType.VALID_INSTANCE, true},
-                {3, 2, 1, null, ParamType.VALID_INSTANCE, true}
+                //ensembleSize,       writeQuorumSize,     ackQuorumSize,    ledgerId,             CB,                         Client conf,      Exception
+                {null,                  1,                  1,              0L,                 ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
+                {3,                     null,               1,              0L,                 ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
+                {3,                     2,                  null,           0L,                 ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
+                {3,                     2,                  1,              null,               ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
+
+                {1,                     2,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
+                {1,                     2,                  3,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
+                {3,                     2,                  3,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
+                {3,                     2,                  1,             -2L,                ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
+
+                {3,                     2,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.OK},
+                {3,                     2,                  2,             -1L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,BKException.Code.OK},
+
+                {10,                    5,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {5,                     6,                  7,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {5,                     6,                  7,             -2L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
+
+                {3,                     2,                  2,               0L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.OK},
+                {11,                    10,                 2,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true}, //new IllegalArgumentException
+                {5,                     6,                  7,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},
+                {7,                     6,                  7,               0L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {1,                     2,                  2,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true}
+
+
+
+
+
 
 
         });
     }
 
+
+    @Before
+    public void set_up(){
+        switch (this.clientConfType){
+            case STD_CONF:
+                break;
+            case NO_STD_CONF:
+                bkc.getConf().setOpportunisticStriping(true);
+                break;
+        }
+
+
+    }
 
     @Test
     public void Test_InitiateAdv() {
@@ -128,28 +156,4 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
         });
     }
 
-private static class Counter {
-    int i;
-    int total;
-
-    synchronized void inc() {
-        i++;
-        total++;
-    }
-
-    synchronized void dec() {
-        i--;
-        notifyAll();
-    }
-
-    synchronized void wait(int limit) throws InterruptedException {
-        while (i > limit) {
-            wait();
-        }
-    }
-
-    synchronized int total() {
-        return total;
-    }
-}
 }

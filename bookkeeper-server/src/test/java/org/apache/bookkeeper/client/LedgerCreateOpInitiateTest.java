@@ -3,8 +3,11 @@ package org.apache.bookkeeper.client;
 
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
+import org.apache.bookkeeper.util.ClientConfType;
+import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -14,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
@@ -23,7 +25,9 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
-    private Object expectedException;
+
+    private ClientConfType clientConfType;
+    private Object expectedValue;
     private Integer ensembleSize;
     private Integer writeQuorumSize;
     private Integer ackQuorumSize;
@@ -31,17 +35,18 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
 
 
-        public LedgerCreateOpInitiateTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, Object expectedException) {
+        public LedgerCreateOpInitiateTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
             super(3);
-            configureInitiate(ensembleSize, writeQuorumSize, ackQuorumSize, cb, expectedException);
+            configureInitiate(ensembleSize, writeQuorumSize, ackQuorumSize, cb, clientConfType, expectedValue);
         }
 
-        private void configureInitiate(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, Object expectedException) {
+        private void configureInitiate(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, ClientConfType clientConfType, Object expectedException) {
 
-            this.expectedException = expectedException;
+            this.expectedValue = expectedException;
             this.ensembleSize = ensembleSize;
             this.writeQuorumSize = writeQuorumSize;
             this.ackQuorumSize = ackQuorumSize;
+            this.clientConfType = clientConfType;
 
             switch (cb) {
                 case VALID_INSTANCE:
@@ -52,42 +57,61 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
                     break;
             }
 
+
         }
 
         @Parameterized.Parameters
         public static Collection<Object[]> getParameters() {
             return Arrays.asList(new Object[][]{
                     //Totale bookies = 3
-                    //ensembleSize,       writeQuorumSize,     ackQuorumSize        CB                                 Exception
-                    {2, 2, 2, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                    {3, 2, 2, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                    {3, 1, 1, ParamType.VALID_INSTANCE, BKException.Code.OK},
-                    {1, 2, 2, ParamType.VALID_INSTANCE, BKException.Code.ZKException},
-                    {3, 4, 2, ParamType.VALID_INSTANCE, BKException.Code.ZKException},
-                    {11, 10, 2, ParamType.VALID_INSTANCE, BKException.Code.NotEnoughBookiesException},
-                    {3, 4, 5, ParamType.VALID_INSTANCE, BKException.Code.ZKException},
-                    {3, 2, 3, ParamType.VALID_INSTANCE, BKException.Code.ZKException},
-                    {3, 4, 2, ParamType.VALID_INSTANCE, BKException.Code.ZKException},
-                    {10, 5, 2, ParamType.VALID_INSTANCE, BKException.Code.NotEnoughBookiesException},
-                    {null, 1, 1, ParamType.VALID_INSTANCE, new NullPointerException()},
-                    {3, null, 1, ParamType.VALID_INSTANCE, new NullPointerException()},
-                    {3, 1, null, ParamType.VALID_INSTANCE, new NullPointerException()}
+                    //ensembleSize,writeQuorumSize,ackQuorumSize, CB, bk conf,      Exception
+                    {null, 1, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true},
+                    {3, null, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true},
+                    {3, 1, null, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true},
 
+                    {1, 1, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.OK},
+                    {3, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,BKException.Code.OK},
+
+                    {1, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
+                    {3, 4, 5, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
+                    {3, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
+
+                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {5, 6, 7, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+
+                    {3, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,BKException.Code.OK},
+                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {5, 6, 7, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},
+                    {1, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true} //???? ensemble è null????
 
             });
         }
 
+
+    @Before
+    public void set_up(){
+        switch (this.clientConfType){
+            case STD_CONF:
+                break;
+            case NO_STD_CONF:
+                bkc.getConf().setOpportunisticStriping(true);
+                break;
+        }
+
+
+    }
 
         @Test
         public void Test_Initiate() {
 
             try {
                 BookKeeper bookkeeper = this.bkc;
+
                 Counter counter = new Counter();
                 LedgerCreateOp ledgerCreateOp = new LedgerCreateOp(bookkeeper, ensembleSize, writeQuorumSize, ackQuorumSize, BookKeeper.DigestType.CRC32,
                         "pwd".getBytes(StandardCharsets.UTF_8), this.cb, counter, null, EnumSet.allOf(WriteFlag.class), bookkeeper.getClientCtx().getClientStats());
 
-                if ((int) this.expectedException == BKException.Code.ZKException) {
+                if ((int) this.expectedValue == BKException.Code.ZKException) {
                     // Non va i busy waiting poichè mi aspetto di non avere risposta !!!
                     ledgerCreateOp.initiate();
                     verifyNoInteractions(this.cb);
@@ -100,13 +124,13 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
                     ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
                     verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
-                    Assert.assertEquals(this.expectedException, argument.getValue());
+                    Assert.assertEquals(this.expectedValue, argument.getValue());
                 }
 
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Assert.assertEquals("Exception that i expect is raised", this.expectedException.getClass(), e.getClass());
+                Assert.assertTrue("Exception that i expect is raised", (boolean) this.expectedValue);
             }
 
         }
@@ -124,33 +148,6 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
         });
     }
-
-    private static class Counter {
-        int i;
-        int total;
-
-        synchronized void inc() {
-            i++;
-            total++;
-        }
-
-        synchronized void dec() {
-            i--;
-            notifyAll();
-        }
-
-        synchronized void wait(int limit) throws InterruptedException {
-            while (i > limit) {
-                wait();
-            }
-        }
-
-        synchronized int total() {
-            return total;
-        }
-    }
-
-
 
 }
 
