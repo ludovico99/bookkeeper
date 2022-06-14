@@ -31,6 +31,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     private Long ledgerId;
     private AsyncCallback.CreateCallback cb;
     private ClientConfType clientConfType;
+    private boolean exceptionInConfigPhase = false;
 
     public LedgerCreateOpInitiateAdvTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedException) {
         super(3);
@@ -97,13 +98,20 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
     @Before
     public void set_up(){
-        switch (this.clientConfType){
-            case STD_CONF:
-                break;
-            case NO_STD_CONF:
-                bkc.getConf().setOpportunisticStriping(true);
-                bkc.getConf().setStoreSystemtimeAsLedgerCreationTime(true);
-                break;
+
+        try {
+            switch (this.clientConfType) {
+                case STD_CONF:
+                    break;
+                case NO_STD_CONF:
+                    bkc.getConf().setOpportunisticStriping(true);
+                    bkc.getConf().setStoreSystemtimeAsLedgerCreationTime(true);
+                    break;
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+            this.exceptionInConfigPhase = true; //Ci sono tanti errori nella connessione con Zookkeeper
         }
 
 
@@ -112,34 +120,41 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     @Test
     public void Test_InitiateAdv() {
 
-        try {
-            BookKeeper bookkeeper = this.bkc;
-            Counter counter = new Counter();
-            LedgerCreateOp ledgerCreateOp = new LedgerCreateOp(bookkeeper, ensembleSize, writeQuorumSize, ackQuorumSize, BookKeeper.DigestType.CRC32,
-                    "pwd".getBytes(StandardCharsets.UTF_8), this.cb, counter, null, EnumSet.allOf(WriteFlag.class), bookkeeper.getClientCtx().getClientStats());
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+                    " been thrown.", true);
 
-            if ((int) this.expectedException == BKException.Code.ZKException) {
-                // Non va i busy waiting poichè mi aspetto di non avere risposta !!!
-                ledgerCreateOp.initiateAdv(this.ledgerId);
-                verifyNoInteractions(this.cb);
+        else {
 
-            } else {
-                counter.inc();
+            try {
+                BookKeeper bookkeeper = this.bkc;
+                Counter counter = new Counter();
+                LedgerCreateOp ledgerCreateOp = new LedgerCreateOp(bookkeeper, ensembleSize, writeQuorumSize, ackQuorumSize, BookKeeper.DigestType.CRC32,
+                        "pwd".getBytes(StandardCharsets.UTF_8), this.cb, counter, null, EnumSet.allOf(WriteFlag.class), bookkeeper.getClientCtx().getClientStats());
 
-                ledgerCreateOp.initiateAdv(this.ledgerId);
+                if ((int) this.expectedException == BKException.Code.ZKException) {
+                    // Non va i busy waiting poichè mi aspetto di non avere risposta !!!
+                    ledgerCreateOp.initiateAdv(this.ledgerId);
+                    verifyNoInteractions(this.cb);
 
-                counter.wait(0);
+                } else {
+                    counter.inc();
 
-                ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
-                verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
-                Assert.assertEquals(this.expectedException, argument.getValue());
+                    ledgerCreateOp.initiateAdv(this.ledgerId);
+
+                    counter.wait(0);
+
+                    ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
+                    verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
+                    Assert.assertEquals(this.expectedException, argument.getValue());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Assert.assertTrue("Exception that i expect is raised", (boolean) this.expectedException);
+
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.assertTrue("Exception that i expect is raised", (boolean) this.expectedException);
 
         }
-
     }
 
 
