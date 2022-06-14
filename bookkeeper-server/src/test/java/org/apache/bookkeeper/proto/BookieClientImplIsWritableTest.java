@@ -92,7 +92,7 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            //exceptionInConfigPhase = true;
+            exceptionInConfigPhase = true;
         }
 
     }
