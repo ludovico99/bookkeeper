@@ -102,6 +102,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                 break;
             case NO_STD_CONF:
                 bkc.getConf().setOpportunisticStriping(true);
+                bkc.getConf().setStoreSystemtimeAsLedgerCreationTime(true);
                 break;
         }
 
@@ -142,9 +143,9 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     }
 
 
-    public static AsyncCallback.CreateCallback createCallback() {
+    public static MyCallback createCallback() {
 
-        return spy(new AsyncCallback.CreateCallback () {
+        return spy(new MyCallback() {
 
             @Override
             public void createComplete(int rc, LedgerHandle lh, Object ctx) {
