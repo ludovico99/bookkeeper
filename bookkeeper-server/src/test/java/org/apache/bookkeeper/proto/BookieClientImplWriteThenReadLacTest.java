@@ -118,12 +118,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
         }
         }catch (Exception e){
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
-
-
 
 
     @Before
@@ -152,7 +150,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList = ByteBufList.get(byteBuf);
 
-                bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                this.bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         entryId, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
                 counter.wait(0);
@@ -166,20 +164,19 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             ByteBuf byteBuf2 = Unpooled.wrappedBuffer("Last add confirmed".getBytes(StandardCharsets.UTF_8));
             ByteBufList byteBufList2 = ByteBufList.get(byteBuf2);
 
-            bookieClientImpl.writeLac(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+            this.bookieClientImpl.writeLac(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                     this.LacEntryId, byteBufList2, writeLacCallback(), counter);
 
             counter.wait(0);
 
-            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
-            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
-            if(clientConfType.equals(ClientConfType.CLOSED_CONFIG)) bookieClientImpl.close();
-
+            if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
+            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
+            if(this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

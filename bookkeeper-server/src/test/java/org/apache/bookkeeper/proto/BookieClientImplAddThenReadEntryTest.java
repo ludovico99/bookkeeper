@@ -79,7 +79,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         try {
 
-
             bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
                     UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
@@ -189,7 +188,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         }catch (Exception e){
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -207,7 +206,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                 {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,     ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,      true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
 
         }) ;
     }

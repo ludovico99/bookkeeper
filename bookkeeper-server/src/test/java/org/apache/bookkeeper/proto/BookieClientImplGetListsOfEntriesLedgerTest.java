@@ -21,15 +21,11 @@ import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.ArgumentCaptor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 
-
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.*;
 
 
 @RunWith(value = Parameterized.class)
@@ -150,7 +146,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

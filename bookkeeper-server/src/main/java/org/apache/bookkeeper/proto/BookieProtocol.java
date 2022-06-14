@@ -127,7 +127,7 @@ public interface BookieProtocol {
     /**
      * Auth message. This code is for passing auth messages between the auth
      * providers on the client and bookie. The message payload is determined
-     * by the auth providers themselves.
+     * ADDENTRY
      */
     byte AUTH = 3;
     byte READ_LAC = 4;

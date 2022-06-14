@@ -181,13 +181,13 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
         return Arrays.asList(new Object[][]{
                 // Bookie Id,               ledger Id,
-                {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE, ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
                 {ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,  ClientConfType.STD_CONF},
-                {ParamType.NULL_INSTANCE,   ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF},
-                {ParamType.VALID_INSTANCE,   ParamType.NULL_INSTANCE,  ClientConfType.STD_CONF},
-                {ParamType.NULL_INSTANCE,   ParamType.NULL_INSTANCE,  ClientConfType.STD_CONF},
-                {ParamType.VALID_INSTANCE,   ParamType.INVALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
-                {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE, ClientConfType.CLOSED_CONFIG}
+                {ParamType.NULL_INSTANCE,   ParamType.VALID_INSTANCE,       ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE,   ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+                {ParamType.NULL_INSTANCE,   ParamType.NULL_INSTANCE,        ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.CLOSED_CONFIG},
+                {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG}
 
         }) ;
     }
