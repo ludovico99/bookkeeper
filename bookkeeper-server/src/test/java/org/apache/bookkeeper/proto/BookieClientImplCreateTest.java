@@ -15,9 +15,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
-import org.apache.bookkeeper.tls.SecurityException;
 import org.apache.bookkeeper.tls.SecurityHandlerFactory;
-import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -58,7 +56,7 @@ public class BookieClientImplCreateTest{
 
         try {
 
-            clientConfiguration = TestBKConfiguration.newClientConfiguration();
+            this.clientConfiguration = TestBKConfiguration.newClientConfiguration();
             OrderedExecutor orderedExecutor = OrderedExecutor.newBuilder().build();
             EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
             ByteBufAllocator byteBufAllocator = UnpooledByteBufAllocator.DEFAULT;
@@ -68,11 +66,11 @@ public class BookieClientImplCreateTest{
             BookieAddressResolver bookieAddressResolver = BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER;
             ExtensionRegistry registry = ExtensionRegistry.newInstance();
 
-            clientConfiguration.setLimitStatsLogging(true);
+            this.clientConfiguration.setLimitStatsLogging(true);
 
-            ClientAuthProvider.Factory factory = AuthProviderFactoryFactory.newClientAuthProviderFactory(clientConfiguration);
+            ClientAuthProvider.Factory factory = AuthProviderFactoryFactory.newClientAuthProviderFactory(this.clientConfiguration);
 
-            this.bookieClientImpl = new BookieClientImpl(clientConfiguration,eventLoopGroup ,
+            this.bookieClientImpl = new BookieClientImpl(this.clientConfiguration,eventLoopGroup ,
                     byteBufAllocator, orderedExecutor,executorService , logger,
                     bookieAddressResolver);
 
@@ -88,9 +86,9 @@ public class BookieClientImplCreateTest{
                     this.bookieId = BookieId.parse("Bookie-1");
                     switch (perChannelBookieClientPool) {
                         case VALID_INSTANCE:
-                            this.pcbcPool = new DefaultPerChannelBookieClientPool(clientConfiguration,bookieClientImpl,
-                                    this.bookieId,1);
-                            this.expectedCreate = new PerChannelBookieClient(clientConfiguration,orderedExecutor,eventLoopGroup,
+                            this.pcbcPool = new DefaultPerChannelBookieClientPool(this.clientConfiguration,
+                                    this.bookieClientImpl, this.bookieId,1);
+                            this.expectedCreate = new PerChannelBookieClient(this.clientConfiguration,orderedExecutor,eventLoopGroup,
                                     byteBufAllocator,this.bookieId,logger,factory,registry,this.pcbcPool,this.shFactory,bookieAddressResolver);
                             break;
 
@@ -146,8 +144,8 @@ public class BookieClientImplCreateTest{
     @Test
     public void test_forceLedger() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
             try {
@@ -155,7 +153,7 @@ public class BookieClientImplCreateTest{
                 if(this.pcbcPoolParamType.equals(ParamType.INVALID_INSTANCE)) this.pcbcPool = new DefaultPerChannelBookieClientPool(clientConfiguration,bookieClientImpl,
                         this.bookieId,0);
 
-                Assert.assertEquals(this.expectedCreate, bookieClientImpl.create(this.bookieId, this.pcbcPool, this.shFactory, this.forceUseV3));
+                Assert.assertEquals(this.expectedCreate, this.bookieClientImpl.create(this.bookieId, this.pcbcPool, this.shFactory, this.forceUseV3));
                 Assert.fail("Test case has failed");
 
             } catch (Exception e){

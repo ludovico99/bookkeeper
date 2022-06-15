@@ -6,7 +6,6 @@ import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
-import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
@@ -25,10 +24,6 @@ import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.InjectMocks;
-import org.mockito.stubbing.Answer;
-
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -128,9 +123,9 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.clientConf, bookieClientImpl,
                     bookieId, 1);
 
-            bookieClientImpl.channels.put(bookieId, pool);
+            this.bookieClientImpl.channels.put(bookieId, pool);
 
-            PerChannelBookieClient spyInstance = spy(bookieClientImpl.create(bookieId, pool,
+            PerChannelBookieClient spyInstance = spy(this.bookieClientImpl.create(bookieId, pool,
                     SecurityProviderFactoryFactory.getSecurityProviderFactory(this.clientConf.getTLSProviderFactoryClass()), false));
 
             doNothing().when(spyInstance).errorOut(isA(PerChannelBookieClient.CompletionKey.class));
@@ -143,7 +138,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             Counter counter = new Counter();
 
-            for (long i = 0; i < numberPendingRequestToInsert; i++) {
+            for (long i = 0; i < this.numberPendingRequestToInsert; i++) {
                 counter.inc();
 
                 handle.addEntry("hello".getBytes(StandardCharsets.UTF_8));
@@ -152,17 +147,17 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                 ByteBufList byteBufList = ByteBufList.get(byteBuf);
 
 
-                bookieClientImpl.addEntry(bookieId,handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                this.bookieClientImpl.addEntry(bookieId,handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         i, byteBufList, writeCallback(), counter , BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
             }
 
-            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
+            if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
                 this.bookieId = bookieId;
                 this.expectedNumPendingRequests = numberPendingRequestToInsert;
             }
 
-            if(clientConfType.equals(ClientConfType.CLOSED_CONFIG)){
+            if (this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)){
                 bookieClientImpl.close();
                 this.expectedNumPendingRequests = 0L;
             }
@@ -195,12 +190,13 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     @Test
     public void test_getNumPendingRequests() {
 
-        if (exceptionInConfigPhase) Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
-            if (expectedNullPointerExNumPendingRequests) {
+            if (this.expectedNullPointerExNumPendingRequests) {
                 try {
-                    bookieClientImpl.getNumPendingRequests(this.bookieId, this.ledgerId);
+                    this.bookieClientImpl.getNumPendingRequests(this.bookieId, this.ledgerId);
                     Assert.fail("An exception was expected but hasn't been thrown");
                 } catch (Exception e) {
                     Assert.assertTrue("Exception that i expect is raised", true);
@@ -208,7 +204,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             } else {
                 System.out.printf("PENDING REQUESTS EXPECTED: %d ", this.expectedNumPendingRequests);
                 Assert.assertEquals(this.expectedNumPendingRequests,
-                        bookieClientImpl.getNumPendingRequests(this.bookieId, this.ledgerId));
+                        this.bookieClientImpl.getNumPendingRequests(this.bookieId, this.ledgerId));
             }
 
         }

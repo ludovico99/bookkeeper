@@ -86,12 +86,6 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                 {7,                     6,                  7,               0L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
                 {1,                     2,                  2,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true}
 
-
-
-
-
-
-
         });
     }
 
@@ -121,11 +115,9 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     public void Test_InitiateAdv() {
 
         if (this.exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
-
         else {
-
             try {
                 BookKeeper bookkeeper = this.bkc;
                 Counter counter = new Counter();

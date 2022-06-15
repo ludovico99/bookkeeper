@@ -10,7 +10,6 @@ import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
@@ -43,7 +42,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 //    void writeLac(final BookieId addr, final long ledgerId, final byte[] masterKey,
 //                  final long lac, final ByteBufList toSend, final BookkeeperInternalCallbacks.WriteLacCallback cb, final Object ctx)
 
-    private BookkeeperInternalCallbacks.WriteLacCallback writeLacCallback;;
+    private BookkeeperInternalCallbacks.WriteLacCallback writeLacCallback;
     private Object ctx;
     private Object expectedWriteLac;
     private Long ledgerId;
@@ -187,7 +186,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
             if(bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE))      this.ledgerId = handle.getId();
 
-            switch (clientConfType){
+            switch (this.clientConfType){
                 case STD_CONF:
                     break;
                 case CLOSED_CONFIG:
@@ -195,14 +194,14 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
                     break;
                 case INVALID_CONFIG:
                     DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
-                            , bookieClientImpl, bookieId, 1);
+                            , this.bookieClientImpl, bookieId, 1);
 
                     pool.clients[0].close();
                     this.bookieClientImpl.channels.put(bookieId, pool);
                     break;
                 case REJECT_CONFIG:
                     DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
-                            , bookieClientImpl, bookieId, 1);
+                            , this.bookieClientImpl, bookieId, 1);
 
                     pool2.clients[0].close();
                     this.bookieClientImpl.channels.put(bookieId, pool2);
@@ -258,15 +257,15 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
     @Test
     public void test_WriteLac() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
             try {
 
                 ((Counter)this.ctx).inc();
 
-                bookieClientImpl.writeLac(this.bookieId, this.ledgerId, this.ms,
+                this.bookieClientImpl.writeLac(this.bookieId, this.ledgerId, this.ms,
                         this.lac, this.toSend, this.writeLacCallback, ctx);
 
                 ((Counter)this.ctx).wait(0);

@@ -5,7 +5,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
-import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
@@ -77,7 +76,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         try {
 
-            bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
+            this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
                     UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
@@ -163,7 +162,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
-            Counter counter = new Counter();;
+            Counter counter = new Counter();
             counter.inc();
 
 
@@ -178,10 +177,10 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                 counter.wait(0);
             }
 
-            if(bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
-            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
-            if (entryIdIdParamType.equals(ParamType.VALID_INSTANCE)) this.entryId = entryId;
-            if(clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+            if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
+            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
+            if(this.entryIdIdParamType.equals(ParamType.VALID_INSTANCE)) this.entryId = entryId;
+            if(this.clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){
@@ -213,15 +212,15 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     @Test
     public void test_ReadAfterAdd() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
             try {
 
                 ((Counter)this.ctx).inc();
 
-                bookieClientImpl.readEntry(this.bookieId, this.ledgerId, this.entryId, this.readCallback, this.ctx, this.flags,"masterKey".getBytes(StandardCharsets.UTF_8));
+                this.bookieClientImpl.readEntry(this.bookieId, this.ledgerId, this.entryId, this.readCallback, this.ctx, this.flags,"masterKey".getBytes(StandardCharsets.UTF_8));
 
                 ((Counter)this.ctx).wait(0);
 

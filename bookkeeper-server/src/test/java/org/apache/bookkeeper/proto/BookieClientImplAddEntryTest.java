@@ -165,7 +165,7 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
-            LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
+            LedgerHandle handle = this.bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
             //Sincrona
             long entryId = handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
 
@@ -174,10 +174,10 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
                             "masterKey".getBytes(StandardCharsets.UTF_8));
 
 
-            if(bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
-            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE))      this.ledgerId = handle.getId();
-            if (entryIdIdParamType.equals(ParamType.VALID_INSTANCE))    this.entryId = entryId;
-            if(clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+            if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
+            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE))      this.ledgerId = handle.getId();
+            if(this.entryIdIdParamType.equals(ParamType.VALID_INSTANCE))    this.entryId = entryId;
+            if(this.clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){
@@ -224,15 +224,15 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
     @Test
     public void test_Add() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
             try {
 
                 ((Counter)this.ctx).inc();
 
-                bookieClientImpl.addEntry(this.bookieId, this.ledgerId, this.ms,
+                this.bookieClientImpl.addEntry(this.bookieId, this.ledgerId, this.ms,
                         this.entryId, this.toSend, this.writeCallback, this.ctx, this.flags, false, EnumSet.allOf(WriteFlag.class));
 
                 ((Counter)this.ctx).wait(0);

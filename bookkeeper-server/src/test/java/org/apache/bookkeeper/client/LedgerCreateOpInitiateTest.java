@@ -97,8 +97,8 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
                     case STD_CONF:
                         break;
                     case NO_STD_CONF:
-                        bkc.getConf().setOpportunisticStriping(true);
-                        bkc.getConf().setStoreSystemtimeAsLedgerCreationTime(true);
+                        this.bkc.getConf().setOpportunisticStriping(true);
+                        this.bkc.getConf().setStoreSystemtimeAsLedgerCreationTime(true);
                         break;
                 }
 
@@ -113,9 +113,8 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
         @Test
         public void Test_Initiate() {
             if (this.exceptionInConfigPhase)
-                Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+                Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                         " been thrown.", true);
-
             else {
                 try {
                     BookKeeper bookkeeper = this.bkc;

@@ -12,7 +12,6 @@ import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,11 +26,9 @@ import java.util.concurrent.Executors;
 public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase {
 
     private  Boolean exceptionInConfigPhase = false;
-    private  ClientConfiguration confLookup;
 
     //Test: isWritable(BookieId address, long key)
     private BookieClientImpl bookieClient;
-    private ClientConfType clientConfType;
     private BookieId bookieId;
     private Object expectedLookupClient;
     private Boolean expectedNullPointerEx = false;
@@ -163,12 +160,11 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
     @Test
     public void test_LookupClient() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
-
         else {
-            if (expectedNullPointerEx || expectedIllegalArgumentException) {
+            if (this.expectedNullPointerEx || this.expectedIllegalArgumentException) {
                 try {
                     this.bookieClient.lookupClient(this.bookieId);
                 } catch (NullPointerException  | IllegalArgumentException e) {

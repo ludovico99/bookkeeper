@@ -92,7 +92,7 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -104,22 +104,22 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
         try {
 
-            if (!bookieIdParamType.equals(ParamType.NULL_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
+            if (!this.bookieIdParamType.equals(ParamType.NULL_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
 
 
-            if (bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) {
+            if (this.bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) {
 
                 DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
                 pool.clients[0].setWritable(false);
 
-                bcIsWritable.channels.put(this.bookieId, pool);
+                this.bcIsWritable.channels.put(this.bookieId, pool);
             }
 
-            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) {
+            if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) {
 
                 DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
 
-                bcIsWritable.channels.put(this.bookieId, pool);
+                this.bcIsWritable.channels.put(this.bookieId, pool);
 
             }
 
@@ -150,19 +150,18 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     public void test_isWritable() {
 
         if (this.exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
-
         else {
-            if (expectedNullPointerEx || expectedIllegalArgumentException) {
+            if (this.expectedNullPointerEx || this.expectedIllegalArgumentException) {
                 try {
-                    bcIsWritable.isWritable(this.bookieId, this.key);
+                    this.bcIsWritable.isWritable(this.bookieId, this.key);
                     Assert.fail("Test case failed");
                 } catch (NullPointerException  | IllegalArgumentException e) {
                     Assert.assertEquals("Exception that i expect was raised", this.expectedIsWritable.getClass(), e.getClass());
                 }
 
-            } else Assert.assertEquals(this.expectedIsWritable, bcIsWritable.isWritable(this.bookieId, this.key));
+            } else Assert.assertEquals(this.expectedIsWritable, this.bcIsWritable.isWritable(this.bookieId, this.key));
 
         }
     }

@@ -102,8 +102,9 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
     @Test
     public void test_GetFaultyBookies() throws Exception {
 
-        if (exceptionInConfigPhase)   Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
-                " been thrown.", true);
+        if (exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
+                    " been thrown.", true);
         else {
 
             long threshold = confFaultyBookies.getBookieErrorThresholdPerInterval();

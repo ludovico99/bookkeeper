@@ -115,8 +115,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                     break;
 
                 case INVALID_INSTANCE:
-                    this.forceLedgerCallback = (rc, ledgerId1, buffer, ctx1) -> {
-                    };
+                    //To be determined
                     break;
             }
         }catch (Exception e){
@@ -155,7 +154,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                 ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList = ByteBufList.get(byteBuf);
 
-                bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                this.bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         entryId, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
                 counter.wait(0);
@@ -164,8 +163,8 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             }
 
 
-            if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
-            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
+            if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
+            if (this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
 
             switch (clientConfType){
                 case STD_CONF:
@@ -175,14 +174,14 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                     break;
                 case INVALID_CONFIG:
                     DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
-                            , bookieClientImpl, bookieId, 1);
+                            , this.bookieClientImpl, bookieId, 1);
 
                     pool.clients[0].close();
                     this.bookieClientImpl.channels.put(bookieId, pool);
                     break;
                 case REJECT_CONFIG:
                     DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
-                            , bookieClientImpl, bookieId, 1);
+                            , this.bookieClientImpl, bookieId, 1);
 
                     pool2.clients[0].close();
                     this.bookieClientImpl.channels.put(bookieId, pool2);
@@ -218,14 +217,14 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     @Test
     public void test_forceLedger() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
             try {
                 ((Counter)this.ctx).inc();
 
-                bookieClientImpl.forceLedger(this.bookieId, this.ledgerId, this.forceLedgerCallback, this.ctx);
+                this.bookieClientImpl.forceLedger(this.bookieId, this.ledgerId, this.forceLedgerCallback, this.ctx);
 
                 ((Counter)this.ctx).wait(0);
 

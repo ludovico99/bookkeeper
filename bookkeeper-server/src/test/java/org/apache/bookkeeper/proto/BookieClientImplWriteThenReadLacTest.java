@@ -204,14 +204,14 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     @Test
     public void test_ReadLacAfterWrite() {
 
-        if (exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
+        if (this.exceptionInConfigPhase)
+            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
             try {
                 ((Counter)this.ctx).inc();
 
-                bookieClientImpl.readLac(this.bookieId, this.ledgerId, this.readLacCallback, this.ctx);
+                this.bookieClientImpl.readLac(this.bookieId, this.ledgerId, this.readLacCallback, this.ctx);
 
                 ((Counter)this.ctx).wait(0);
 
