@@ -254,17 +254,6 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
         }) ;
     }
 
-    @After
-    public void tear_down() throws Exception {
-
-        for (int i=0; i<numBookies; i++){
-            serverByIndex(i).shutdown();
-            serverByIndex(i).getBookie().shutdown();
-        }
-
-    }
-
-
 
     @Test
     public void test_WriteLac() {
@@ -288,6 +277,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
                 Assert.assertEquals(this.expectedWriteLac, argument.getValue());
 
             } catch (Exception e){
+                e.printStackTrace();
                 Assert.assertTrue("An exception was expected", (Boolean) this.expectedWriteLac);
             }
 
