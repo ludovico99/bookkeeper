@@ -14,10 +14,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
-import org.apache.bookkeeper.util.AvailabilityOfEntriesOfLedger;
-import org.apache.bookkeeper.util.ByteBufList;
-import org.apache.bookkeeper.util.Counter;
-import org.apache.bookkeeper.util.ParamType;
+import org.apache.bookkeeper.util.*;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -42,28 +39,33 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
     private Long ledgerId;
     private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
+    private OrderedExecutor orderedExecutor;
+    private ClientConfType clientConfType;
     private BookieId bookieId;
     private int lastRC = -1;
 
 
 
 
-    public BookieClientImplGetListsOfEntriesLedgerTest(ParamType bookieId, ParamType ledgerId) {
+    public BookieClientImplGetListsOfEntriesLedgerTest(ParamType bookieId, ParamType ledgerId, ClientConfType clientConfType) {
         super(3);
-        configureAddThenRead(bookieId, ledgerId);
+        configureAddThenRead(bookieId, ledgerId, clientConfType);
 
     }
 
 
-    private void configureAddThenRead(ParamType bookieId, ParamType ledgerId) {
+    private void configureAddThenRead(ParamType bookieId, ParamType ledgerId, ClientConfType clientConfType) {
 
         this.bookieIdParamType = bookieId;
         this.ledgerIdParamType = ledgerId;
+        this.clientConfType = clientConfType;
 
         try {
 
+            this.orderedExecutor = OrderedExecutor.newBuilder().build();
+
             this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                    UnpooledByteBufAllocator.DEFAULT,this.orderedExecutor, Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
@@ -95,6 +97,17 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
                 case INVALID_INSTANCE:
                     this.ledgerId = -5L;
+                    this.expectedGetListsOfEntriesLedger = true;
+                    break;
+
+            }
+
+            switch (clientConfType){
+                case STD_CONF:
+                    break;
+                case INVALID_CONFIG:
+                case CLOSED_CONFIG:
+                case REJECT_CONFIG:
                     this.expectedGetListsOfEntriesLedger = true;
                     break;
 
@@ -144,6 +157,33 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
 
 
+            switch (clientConfType){
+                case STD_CONF:
+                    break;
+                case CLOSED_CONFIG:
+                    this.bookieClientImpl.close();
+                    break;
+                case INVALID_CONFIG:
+                    DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , bookieClientImpl, bookieId, 1);
+
+                    pool.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool);
+                    break;
+                case REJECT_CONFIG:
+                    DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , bookieClientImpl, bookieId, 1);
+
+                    pool2.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool2);
+                    this.orderedExecutor.shutdown();
+                    break;
+
+
+            }
+
+
+
         }catch (Exception e){
             e.printStackTrace();
             this.exceptionInConfigPhase = true;
@@ -156,18 +196,24 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                       Ledger_id
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE},
-                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE},
-                {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE},
+                //Bookie_ID                       Ledger_id                     Client config
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {  ParamType.VALID_INSTANCE,     ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {  ParamType.VALID_INSTANCE,     ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
 
-                {  ParamType.INVALID_INSTANCE,      ParamType.VALID_INSTANCE},
-                {  ParamType.INVALID_INSTANCE,      ParamType.INVALID_INSTANCE},
-                {  ParamType.INVALID_INSTANCE,      ParamType.NULL_INSTANCE},
+                {  ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {  ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {  ParamType.INVALID_INSTANCE,   ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
 
-                {  ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE},
-                {  ParamType.NULL_INSTANCE,      ParamType.INVALID_INSTANCE},
-                {  ParamType.NULL_INSTANCE,      ParamType.NULL_INSTANCE}
+                {  ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {  ParamType.NULL_INSTANCE,      ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {  ParamType.NULL_INSTANCE,      ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.INVALID_CONFIG},
+
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.REJECT_CONFIG},
+
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG},
 
         }) ;
     }
@@ -185,7 +231,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
 
     @Test
-    public void test_ReadAfterAdd() {
+    public void test_GetListsOfEntriesLedger() {
 
         if (exceptionInConfigPhase)
             Assert.assertTrue("No exception was expected, but an exception during configuration phase has" +
@@ -194,12 +240,11 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
             try {
 
                 AvailabilityOfEntriesOfLedger entriesOfLedger = bookieClientImpl.getListOfEntriesOfLedger(this.bookieId, this.ledgerId).join();
-
                 Assert.assertEquals(this.expectedGetListsOfEntriesLedger,entriesOfLedger.getTotalNumOfAvailableEntries());
 
-
             } catch (Exception e){
-                Assert.assertTrue("An exception was expected", (Boolean) this.expectedGetListsOfEntriesLedger);
+                e.printStackTrace();
+                Assert.assertTrue("An exception was expected", (boolean) this.expectedGetListsOfEntriesLedger);
             }
 
         }

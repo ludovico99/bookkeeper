@@ -10,6 +10,7 @@ import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
+import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
@@ -50,7 +51,8 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
     private byte[] ms;
     private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
-    private ClientConfType clientConfTypeEnum;
+    private ClientConfType clientConfType;
+    private OrderedExecutor orderedExecutor;
     private BookieId bookieId;
     private Long lac;
     private int lastRc = -1;
@@ -67,7 +69,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
         this.bookieIdParamType = bookieId;
         this.ledgerIdParamType = ledgerId;
-        this.clientConfTypeEnum = clientConfType;
+        this.clientConfType = clientConfType;
         this.ctx = ctx;
         this.expectedWriteLac = expectedAdd;
         this.ms = ms;
@@ -75,8 +77,10 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
         try {
 
+            this.orderedExecutor = OrderedExecutor.newBuilder().build();
+
             this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                    UnpooledByteBufAllocator.DEFAULT, orderedExecutor, Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
@@ -182,7 +186,29 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
             if(bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE))      this.ledgerId = handle.getId();
-            if(clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+
+            switch (clientConfType){
+                case STD_CONF:
+                    break;
+                case CLOSED_CONFIG:
+                    this.bookieClientImpl.close();
+                    break;
+                case INVALID_CONFIG:
+                    DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , bookieClientImpl, bookieId, 1);
+
+                    pool.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool);
+                    break;
+                case REJECT_CONFIG:
+                    DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , bookieClientImpl, bookieId, 1);
+
+                    pool2.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool2);
+                    this.orderedExecutor.shutdown();
+                    break;
+            }
 
 
         }catch (Exception e){
@@ -219,7 +245,10 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   null,                        ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   emptyByteBufList,            ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.WriteException},
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   notValidMasterKey,ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.UnauthorizedAccessException},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   null,             ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true}
+//                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   null,             ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true},
+
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.REJECT_CONFIG,           BKException.Code.InterruptedException},
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.INVALID_CONFIG,          BKException.Code.ClientClosedException}
 
 
         }) ;

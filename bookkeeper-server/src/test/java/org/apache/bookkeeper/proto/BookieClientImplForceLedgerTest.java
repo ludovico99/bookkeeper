@@ -44,6 +44,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     private BookkeeperInternalCallbacks.ForceLedgerCallback forceLedgerCallback;
     private Object ctx;
     private Object expectedForceLedger;
+    private OrderedExecutor orderedExecutor;
     private Long ledgerId;
     private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
@@ -68,10 +69,13 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
         try {
 
+            this.orderedExecutor = OrderedExecutor.newBuilder().build();
+
             this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                    UnpooledByteBufAllocator.DEFAULT,this.orderedExecutor , Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+
 
             switch (bookieId){
                 case VALID_INSTANCE:
@@ -117,7 +121,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             }
         }catch (Exception e){
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -162,13 +166,32 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
             if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
-            if(clientConfType.equals(ClientConfType.CLOSED_CONFIG)) bookieClientImpl.close();
 
+            switch (clientConfType){
+                case STD_CONF:
+                    break;
+                case CLOSED_CONFIG:
+                    this.bookieClientImpl.close();
+                    break;
+                case INVALID_CONFIG:
+                    DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , bookieClientImpl, bookieId, 1);
 
+                    pool.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool);
+                    break;
+                case REJECT_CONFIG:
+                    DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , bookieClientImpl, bookieId, 1);
 
+                    pool2.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool2);
+                    this.orderedExecutor.shutdown();
+                    break;
+            }
         }catch (Exception e){
             e.printStackTrace();
-            //exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -185,7 +208,9 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                 { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
                 { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException}
+                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.REJECT_CONFIG,  BKException.Code.InterruptedException},
         }) ;
     }
 

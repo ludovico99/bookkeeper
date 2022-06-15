@@ -146,9 +146,10 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
                     //to be determined
                     break;
             }
+
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
 
@@ -192,7 +193,7 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
 
 
         byte[] validMasterKey = "masterKey".getBytes(StandardCharsets.UTF_8);
-        byte[] notValidMasterKey = "noPwd".getBytes(StandardCharsets.UTF_8);
+        byte[] notValidMasterKey = "anotherMasterKey".getBytes(StandardCharsets.UTF_8);
 
         ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
         ByteBufList byteBufList = ByteBufList.get(byteBuf);
@@ -243,7 +244,7 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
                 ((Counter)this.ctx).inc();
 
                 bookieClientImpl.addEntry(this.bookieId, this.ledgerId, this.ms,
-                        this.entryId, this.toSend, this.writeCallback, ctx, this.flags, false, EnumSet.allOf(WriteFlag.class));
+                        this.entryId, this.toSend, this.writeCallback, this.ctx, this.flags, false, EnumSet.allOf(WriteFlag.class));
 
                 ((Counter)this.ctx).wait(0);
 
