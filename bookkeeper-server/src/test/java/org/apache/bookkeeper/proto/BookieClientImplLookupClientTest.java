@@ -131,6 +131,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
 
 
        }catch (Exception e){
+           
            e.printStackTrace();
            this.exceptionInConfigPhase = true;
        }
@@ -155,7 +156,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
         });
     }
 
-    
+
 
 
 
