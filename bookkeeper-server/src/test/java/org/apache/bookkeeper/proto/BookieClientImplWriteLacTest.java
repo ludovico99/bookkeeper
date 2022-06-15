@@ -142,7 +142,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
             }
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
 
@@ -213,7 +213,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

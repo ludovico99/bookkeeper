@@ -218,16 +218,6 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
         }) ;
     }
 
-    @After
-    public void tear_down() throws Exception {
-
-        for (int i=0; i<numBookies; i++){
-            serverByIndex(i).shutdown();
-            serverByIndex(i).getBookie().shutdown();
-        }
-
-    }
-
 
 
     @Test

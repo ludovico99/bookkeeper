@@ -115,7 +115,7 @@ public class BookieClientImplCreateTest{
 
         }catch (Exception e){
             e.printStackTrace();
-            //exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

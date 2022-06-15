@@ -192,17 +192,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         }) ;
     }
 
-    @After
-    public void tear_down() throws Exception {
-
-        for (int i=0 ; i< numBookies;i++) {
-            serverByIndex(i).getBookie().shutdown();
-            serverByIndex(i).shutdown();
-
-        }
-
-    }
-
 
     @Test
     public void test_getNumPendingRequests() {
