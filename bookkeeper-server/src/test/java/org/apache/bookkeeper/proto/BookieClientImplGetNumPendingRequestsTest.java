@@ -3,6 +3,7 @@ package org.apache.bookkeeper.proto;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.bookkeeper.client.BKException;
@@ -107,7 +108,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             }
         }catch (Exception e){
             e.printStackTrace();
-           // exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -124,24 +125,21 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
 
-//            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.clientConf, bookieClientImpl,
-//                    bookieId, 1);
-//
-//            bookieClientImpl.channels.put(bookieId, pool);
+            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.clientConf, bookieClientImpl,
+                    bookieId, 1);
 
-//            PerChannelBookieClient spyInstance = spy(bookieClientImpl.create(bookieId, pool,
-//                    SecurityProviderFactoryFactory.getSecurityProviderFactory(this.clientConf.getTLSProviderFactoryClass()), false));
-//
-//            doNothing().when(spyInstance).errorOut(isA(PerChannelBookieClient.CompletionKey.class));
-//            doNothing().when(spyInstance).errorOut(isA(PerChannelBookieClient.CompletionKey.class), isA(int.class));
-//            doNothing().when(spyInstance).checkTimeoutOnPendingOperations();
+            bookieClientImpl.channels.put(bookieId, pool);
 
-//            PerChannelBookieClient client =mock(PerChannelBookieClient.class);
-//
-//
-//            when(client.getNumPendingCompletionRequests()).thenCallRealMethod();
+            PerChannelBookieClient spyInstance = spy(bookieClientImpl.create(bookieId, pool,
+                    SecurityProviderFactoryFactory.getSecurityProviderFactory(this.clientConf.getTLSProviderFactoryClass()), false));
 
-//            Arrays.fill(pool.clients,spyInstance);
+            doNothing().when(spyInstance).errorOut(isA(PerChannelBookieClient.CompletionKey.class));
+            doNothing().when(spyInstance).errorOut(isA(PerChannelBookieClient.CompletionKey.class), isA(int.class));
+            doNothing().when(spyInstance).checkTimeoutOnPendingOperations();
+            doNothing().when(spyInstance).channelRead(isA(ChannelHandlerContext.class),isA(Object.class));
+            //In questo modo mi assicuro che le richieste non vengano eseguite
+
+            Arrays.fill(pool.clients,spyInstance);
 
             Counter counter = new Counter();
 
@@ -153,6 +151,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                 ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList = ByteBufList.get(byteBuf);
 
+
                 bookieClientImpl.addEntry(bookieId,handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         i, byteBufList, writeCallback(), counter , BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
@@ -160,7 +159,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             if (bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
                 this.bookieId = bookieId;
-                this.expectedNumPendingRequests = counter.i;
+                this.expectedNumPendingRequests = numberPendingRequestToInsert;
             }
 
             if(clientConfType.equals(ClientConfType.CLOSED_CONFIG)){
@@ -170,7 +169,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
         }catch (Exception e){
             e.printStackTrace();
-            exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -180,14 +179,14 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                // Bookie Id,               ledger Id,
-                {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-                {ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,  ClientConfType.STD_CONF},
-                {ParamType.NULL_INSTANCE,   ParamType.VALID_INSTANCE,       ClientConfType.STD_CONF},
-                {ParamType.VALID_INSTANCE,   ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
-                {ParamType.NULL_INSTANCE,   ParamType.NULL_INSTANCE,        ClientConfType.STD_CONF},
-                {ParamType.VALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.CLOSED_CONFIG},
-                {ParamType.VALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG}
+                // Bookie Id,                  ledger Id,                     Client conf type
+                {ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE,     ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+                {ParamType.NULL_INSTANCE,      ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE,     ParamType.INVALID_INSTANCE,    ClientConfType.CLOSED_CONFIG},
+                {ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG}
 
         }) ;
     }

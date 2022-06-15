@@ -181,7 +181,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             if(bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
             if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
             if (entryIdIdParamType.equals(ParamType.VALID_INSTANCE)) this.entryId = entryId;
-            if(clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) bookieClientImpl.close();
+            if(clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){

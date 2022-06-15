@@ -23,7 +23,7 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
-import java.io.IOException;
+
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -47,9 +47,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     private Long ledgerId;
     private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
-    private  ClientConfType clientConfType;
+    private int writeLacRC;
+    private ClientConfType clientConfType;
     private BookieId bookieId;
-    private Long LacEntryId;
+    private int writeRC;
 
 
 
@@ -143,7 +144,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             Counter counter = new Counter();
             counter.inc();
 
-            while(this.LacEntryId == null) {
+            while(this.writeRC != BKException.Code.OK) {
 
                 System.out.println("Retry");
 
@@ -161,17 +162,19 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             counter = new Counter();
             counter.inc();
 
-            ByteBuf byteBuf2 = Unpooled.wrappedBuffer("Last add confirmed".getBytes(StandardCharsets.UTF_8));
-            ByteBufList byteBufList2 = ByteBufList.get(byteBuf2);
+            while(this.writeLacRC != BKException.Code.OK) {
+                ByteBuf byteBuf2 = Unpooled.wrappedBuffer("Last add confirmed".getBytes(StandardCharsets.UTF_8));
+                ByteBufList byteBufList2 = ByteBufList.get(byteBuf2);
 
-            this.bookieClientImpl.writeLac(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                    this.LacEntryId, byteBufList2, writeLacCallback(), counter);
+                this.bookieClientImpl.writeLac(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                        entryId, byteBufList2, writeLacCallback(), counter);
 
-            counter.wait(0);
+                counter.wait(0);
+            }
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
-            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
-            if(this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+            if (this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
+            if (this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){
@@ -228,17 +231,11 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
     private BookkeeperInternalCallbacks.WriteLacCallback writeLacCallback(){
 
-        return new BookkeeperInternalCallbacks.WriteLacCallback() {
-
-            @Override
-            public void writeLacComplete(int rc, long ledgerId, BookieId addr, Object ctx) {
-                Counter counter = (Counter) ctx;
-                counter.dec();
-                System.out.println("WRITE LAC: rc = " + rc + " for ledger: " + ledgerId + " at bookie: " + addr);
-            }
-
-
-
+        return (rc, ledgerId, addr, ctx) -> {
+            Counter counter = (Counter) ctx;
+            counter.dec();
+            this.writeLacRC = rc;
+            System.out.println("WRITE LAC: rc = " + rc + " for ledger: " + ledgerId + " at bookie: " + addr);
         };
 
     }
@@ -262,7 +259,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             Counter counter = (Counter) ctx1;
             counter.dec();
 
-            if(rc == BKException.Code.OK) this.LacEntryId = entry;
+            this.writeRC = rc;
 
             System.out.println("WRITE: rc = " + rc + " for entry: " + entry + " at ledger: " +
                     ledger + " at bookie: " + addr );
