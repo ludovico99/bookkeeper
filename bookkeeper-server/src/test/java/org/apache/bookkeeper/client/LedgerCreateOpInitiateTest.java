@@ -82,7 +82,7 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
                     {3, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,BKException.Code.OK},
                     {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
-                    {5, 6, 7, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},
+                    {5, 6, 7, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},//Null pointer exception
                     {1, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true} //???? ensemble è null????
 
             });
@@ -123,24 +123,22 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
                     LedgerCreateOp ledgerCreateOp = new LedgerCreateOp(bookkeeper, ensembleSize, writeQuorumSize, ackQuorumSize, BookKeeper.DigestType.CRC32,
                             "pwd".getBytes(StandardCharsets.UTF_8), this.cb, counter, null, EnumSet.allOf(WriteFlag.class), bookkeeper.getClientCtx().getClientStats());
 
-                    if ((int) this.expectedValue == BKException.Code.ZKException) {
-                        // Non va i busy waiting poichè mi aspetto di non avere risposta !!!
-                        ledgerCreateOp.initiate();
-                        verifyNoInteractions(this.cb);
-                    } else {
-                        counter.inc();
+                    counter.inc();
 
-                        ledgerCreateOp.initiate();
+                    ledgerCreateOp.initiate();
 
+                    if(((int) this.expectedValue != BKException.Code.ZKException)) {
                         counter.wait(0);
-
                         ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
                         verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
                         Assert.assertEquals(this.expectedValue, argument.getValue());
                     }
-
-
-                } catch (Exception e) {
+                    else verifyNoInteractions(this.cb);
+                }
+                catch (ClassCastException castException){
+                    Assert.fail("Cast exception raised means that the expected value is wrong");
+                }
+                catch (Exception e) {
                     e.printStackTrace();
                     Assert.assertTrue("Exception that i expect is raised", (boolean) this.expectedValue);
                 }

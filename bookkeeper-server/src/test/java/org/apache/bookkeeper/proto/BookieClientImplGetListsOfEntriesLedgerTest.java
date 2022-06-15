@@ -197,22 +197,22 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
         return Arrays.asList(new Object[][]{
                 //Bookie_ID                       Ledger_id                     Client config
                 {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-//                {  ParamType.VALID_INSTANCE,     ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
-//                {  ParamType.VALID_INSTANCE,     ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
-//
-//                {  ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-//                {  ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
-//                {  ParamType.INVALID_INSTANCE,   ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
-//
-//                {  ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-//                {  ParamType.NULL_INSTANCE,      ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
-//                {  ParamType.NULL_INSTANCE,      ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
-//
-//                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.INVALID_CONFIG},
-//
-//                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.REJECT_CONFIG},
-//
-//                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG},
+                {  ParamType.VALID_INSTANCE,     ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {  ParamType.VALID_INSTANCE,     ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+
+                {  ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {  ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {  ParamType.INVALID_INSTANCE,   ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+
+                {  ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
+                {  ParamType.NULL_INSTANCE,      ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
+                {  ParamType.NULL_INSTANCE,      ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.INVALID_CONFIG},
+
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.REJECT_CONFIG},
+
+                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG},
 
         }) ;
     }

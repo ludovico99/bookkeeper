@@ -163,15 +163,13 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                     "masterKey".getBytes(StandardCharsets.UTF_8));
 
             Counter counter = new Counter();
-            counter.inc();
-
 
             while(this.lastRC != 0) {
-
+                counter.i = 1;
                 ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList = ByteBufList.get(byteBuf);
 
-                bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                this.bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         0L, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
                 counter.wait(0);
