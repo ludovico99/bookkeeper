@@ -160,9 +160,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             }
 
             counter = new Counter();
-            counter.inc();
+
 
             while(this.writeLacRC != BKException.Code.OK) {
+                counter.i = 1;
                 ByteBuf byteBuf2 = Unpooled.wrappedBuffer("Last add confirmed".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList2 = ByteBufList.get(byteBuf2);
 
