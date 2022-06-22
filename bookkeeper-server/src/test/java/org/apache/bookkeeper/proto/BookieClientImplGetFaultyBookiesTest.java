@@ -14,6 +14,7 @@ import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -22,7 +23,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestCase {
 

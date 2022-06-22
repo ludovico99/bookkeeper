@@ -20,15 +20,13 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
     private Boolean exceptionInConfigPhase = false;
 
-
     //Test: isWritable(BookieId address, long key)
-    private BookieClientImpl bcIsWritable;
+    private BookieClientImpl bookieClientImpl;
     private ParamType bookieIdParamType;
     private BookieId bookieId;
     private long key;
@@ -37,15 +35,15 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     private Boolean expectedIllegalArgumentException = false;
 
 
-    public BookieClientImplIsWritableTest(ParamType BookieId, long key,ClientConfType clientConfType, Object isWritable) {
+    public BookieClientImplIsWritableTest(ParamType BookieId, long key, Object isWritable) {
         super(1);
 
-        configureIsWritable(BookieId, key,clientConfType,isWritable);
+        configureIsWritable(BookieId, key,isWritable);
 
 
     }
 
-    private void configureIsWritable(ParamType enumType,long key,ClientConfType clientConfType, Object expected) {
+    private void configureIsWritable(ParamType enumType,long key, Object expected) {
         this.key = key;
         this.expectedIsWritable = expected;
         this.bookieIdParamType = enumType;
@@ -56,43 +54,41 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
             switch (enumType) {
                 case VALID_INSTANCE:
+                    break;
                 case INVALID_INSTANCE:
-                    this.expectedIsWritable = expected;
+                    this.expectedIllegalArgumentException = true;
                     break;
 
                 case NULL_INSTANCE:
                     this.bookieId = null;
-                    this.expectedIsWritable = expected;
                     this.expectedNullPointerEx = true;
                     break;
 
             }
 
-            this.bcIsWritable = new BookieClientImpl(confIsWritable, new NioEventLoopGroup(),
+            this.bookieClientImpl = new BookieClientImpl(confIsWritable, new NioEventLoopGroup(),
                     UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
                     new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
                     BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-            switch (clientConfType) {
-                case STD_CONF:
-                    break;
-
-                case CLOSED_CONFIG:
-                    this.bcIsWritable.close();
-                    this.expectedIsWritable = expected;
-                    break;
-
-                case INVALID_CONFIG:
-                    confIsWritable.setNumChannelsPerBookie(0);
-                    this.expectedIllegalArgumentException = true;
-                    this.expectedIsWritable = expected;
-                    break;
-
-            }
-
-        }catch (Exception e){
+//            switch (clientConfType) {
+//                case STD_CONF:
+//                    break;
+//
+//                case CLOSED_CONFIG:
+//                    this.bookieClientImpl.close();
+//                    break;
+//
+//                case INVALID_CONFIG:
+//                    confIsWritable.setNumChannelsPerBookie(0);
+//                    this.expectedIllegalArgumentException = true;
+//                    break;
+//
+//            }
+        }
+        catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -104,28 +100,19 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
 
         try {
 
-            if (!this.bookieIdParamType.equals(ParamType.NULL_INSTANCE)) this.bookieId = serverByIndex(0).getBookieId();
-
-
-            if (this.bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) {
-
-                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
-                pool.clients[0].setWritable(false);
-
-                this.bcIsWritable.channels.put(this.bookieId, pool);
-            }
-
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) {
-
-                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bcIsWritable, this.bookieId, 1);
-
-                this.bcIsWritable.channels.put(this.bookieId, pool);
+                this.bookieId = serverByIndex(0).getBookieId();
+                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(new ClientConfiguration(), bookieClientImpl, this.bookieId, 1);
+                pool.clients[0].setWritable((boolean) this.expectedIsWritable);
+                this.bookieClientImpl.channels.put(this.bookieId, pool);
 
             }
+
+
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -135,12 +122,17 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //BookieId,                     key,     ClientConf                   Expected exception/value
-                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.STD_CONF,                true},
-                {ParamType.INVALID_INSTANCE,   -1L, ClientConfType.STD_CONF,                false},
-                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.CLOSED_CONFIG,           true},
-                {ParamType.VALID_INSTANCE,      2L, ClientConfType.CLOSED_CONFIG,           true},
-                {ParamType.NULL_INSTANCE,       1L, ClientConfType.STD_CONF,                new NullPointerException()}
+                //BookieId,                     key,     ClientConf                   value/Expected exception
+                {ParamType.VALID_INSTANCE,     -2L, true},
+                {ParamType.VALID_INSTANCE,     -2L, false},
+                {ParamType.INVALID_INSTANCE,   -2L, new IllegalArgumentException()},
+                {ParamType.NULL_INSTANCE,       1L, new NullPointerException()}
+//                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.STD_CONF,                true},
+//                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.STD_CONF,                false},
+//                {ParamType.INVALID_INSTANCE,   -1L, ClientConfType.STD_CONF,                new IllegalArgumentException()},
+//                {ParamType.VALID_INSTANCE,     -1L, ClientConfType.CLOSED_CONFIG,           true},
+//                {ParamType.INVALID_INSTANCE,    2L, ClientConfType.CLOSED_CONFIG,           new IllegalArgumentException()},
+//                {ParamType.NULL_INSTANCE,       1L, ClientConfType.STD_CONF,                new NullPointerException()}
 
         }) ;
     }
@@ -155,13 +147,14 @@ public class BookieClientImplIsWritableTest extends BookKeeperClusterTestCase {
         else {
             if (this.expectedNullPointerEx || this.expectedIllegalArgumentException) {
                 try {
-                    this.bcIsWritable.isWritable(this.bookieId, this.key);
+                    if(this.bookieIdParamType.equals(ParamType.INVALID_INSTANCE)) this.bookieClientImpl.isWritable(BookieId.parse(""), this.key);
+                    else this.bookieClientImpl.isWritable(this.bookieId, this.key);
                     Assert.fail("Test case failed");
                 } catch (NullPointerException  | IllegalArgumentException e) {
                     Assert.assertEquals("Exception that i expect was raised", this.expectedIsWritable.getClass(), e.getClass());
                 }
 
-            } else Assert.assertEquals(this.expectedIsWritable, this.bcIsWritable.isWritable(this.bookieId, this.key));
+            } else Assert.assertEquals(this.expectedIsWritable, this.bookieClientImpl.isWritable(this.bookieId, this.key));
 
         }
     }
