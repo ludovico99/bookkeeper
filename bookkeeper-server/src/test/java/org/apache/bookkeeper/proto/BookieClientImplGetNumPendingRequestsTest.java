@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperClusterTestCase {
 
@@ -73,6 +73,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             switch (bookieId) {
                 case VALID_INSTANCE:
+                    this.expectedNumPendingRequests = numberPendingRequestToInsert;
                     break;
 
                 case NULL_INSTANCE:
@@ -136,10 +137,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             Arrays.fill(pool.clients,spyInstance);
 
-            Counter counter = new Counter();
-
             for (long i = 0; i < this.numberPendingRequestToInsert; i++) {
-                counter.inc();
 
                 handle.addEntry("hello".getBytes(StandardCharsets.UTF_8));
 
@@ -148,13 +146,12 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
 
                 this.bookieClientImpl.addEntry(bookieId,handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                        i, byteBufList, writeCallback(), counter , BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
+                        i, byteBufList, writeCallback(), new Object() , BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
             }
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
                 this.bookieId = bookieId;
-                this.expectedNumPendingRequests = numberPendingRequestToInsert;
             }
 
             if (this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)){
@@ -214,9 +211,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     private BookkeeperInternalCallbacks.WriteCallback writeCallback(){
 
         return (rc, ledger, entry, addr, ctx1) -> {
-            Counter counter = (Counter) ctx1;
-            counter.dec();
-
             System.out.println("WRITE: rc = " + rc + " for entry: " + entry + " at ledger: " +
                     ledger + " at bookie: " + addr );
 

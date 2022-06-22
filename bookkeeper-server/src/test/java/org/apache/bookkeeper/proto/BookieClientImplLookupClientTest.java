@@ -13,6 +13,7 @@ import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase {
 

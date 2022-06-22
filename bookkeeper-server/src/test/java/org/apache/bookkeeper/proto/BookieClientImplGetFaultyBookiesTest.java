@@ -12,14 +12,12 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -28,30 +26,21 @@ import java.util.concurrent.Executors;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestCase {
 
-    private static Boolean exceptionInConfigPhase = false;
-    private static BookieClientImpl bcFaultyBookies;
-    private static ClientConfiguration confFaultyBookies;
+    private  Boolean exceptionInConfigPhase = false;
+    private  BookieClientImpl bookieClientImpl;
+    private  ClientConfiguration confFaultyBookies;
 
     //Test: GetFaultyBookies()
     private int nFaultyBookies;
     private List<BookieId> expectedFaultyBookies;
 
 
-    public BookieClientImplGetFaultyBookiesTest(int nFaultyBookies, List<BookieId> faultyBookies) {
+    public BookieClientImplGetFaultyBookiesTest(int nFaultyBookie) {
         super(0);
-        configureGetFaultyBookies(nFaultyBookies,  faultyBookies);
+        configureGetFaultyBookies(nFaultyBookie);
 
     }
 
-    public static void setBcFaultyBookies() throws IOException {
-
-        confFaultyBookies = TestBKConfiguration.newClientConfiguration();
-
-        bcFaultyBookies = new BookieClientImpl(confFaultyBookies, new NioEventLoopGroup(),
-                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
-    }
 
     @Before
     public void set_up() throws Exception {
@@ -71,10 +60,21 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
 
 
-    private void configureGetFaultyBookies(int nFaultyBookies, List<BookieId> expectedFaultyBookiesList) {
+    private void configureGetFaultyBookies(int nFaultyBookies) {
 
-        this.nFaultyBookies = nFaultyBookies;
-        this.expectedFaultyBookies = expectedFaultyBookiesList;
+        try {
+            this.nFaultyBookies = nFaultyBookies;
+            this.expectedFaultyBookies = Lists.newArrayList();
+            this.confFaultyBookies = TestBKConfiguration.newClientConfiguration();
+
+            this.bookieClientImpl = new BookieClientImpl(this.confFaultyBookies, new NioEventLoopGroup(),
+                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+        }catch (Exception e){
+            e.printStackTrace();
+            this.exceptionInConfigPhase = true;
+        }
 
     }
 
@@ -82,19 +82,10 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
     @Parameterized.Parameters
     public static Collection<Object[]> getParameters() {
-        try {
-            setBcFaultyBookies();
-
-        } catch (Exception e){
-            e.printStackTrace();
-            exceptionInConfigPhase = true;
-        }
-
         return Arrays.asList(new Object[][]{
-                //N.di Faulty bookies,   expected list di Faulty bookies
-                {10, Lists.newArrayList()},
-                {-1, Lists.newArrayList()},
-                {0, Lists.newArrayList()}
+                //N.di Faulty bookies
+                {10},
+                {0}
         });
     }
 
@@ -111,18 +102,18 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
             for (int i = 0; i < nFaultyBookies; i++) {
 
-                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bcFaultyBookies,
+                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bookieClientImpl,
                         serverByIndex(i).getBookieId(), 1);
 
                 pool.errorCounter.getAndSet((int) ++threshold);
 
-                bcFaultyBookies.channels.put(serverByIndex(i).getBookieId(), pool);
+                bookieClientImpl.channels.put(serverByIndex(i).getBookieId(), pool);
 
             }
 
             this.expectedFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 
-            List<BookieId> actualFaultyBookies = bcFaultyBookies.getFaultyBookies();
+            List<BookieId> actualFaultyBookies = bookieClientImpl.getFaultyBookies();
 
             actualFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 

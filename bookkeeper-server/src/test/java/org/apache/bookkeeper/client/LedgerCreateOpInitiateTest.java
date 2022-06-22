@@ -8,6 +8,7 @@ import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,7 +22,7 @@ import java.util.EnumSet;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
