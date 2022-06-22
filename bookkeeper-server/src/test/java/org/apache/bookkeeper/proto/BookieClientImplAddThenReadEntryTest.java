@@ -200,8 +200,8 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                 {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.TimeoutException},
                 {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,     ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,      true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY, ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY,  ClientConfType.CLOSED_CONFIG,      true},
+                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY,  ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
 
         }) ;
     }
