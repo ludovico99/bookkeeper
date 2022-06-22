@@ -45,9 +45,13 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
     @Before
     public void set_up() throws Exception {
 
+        ServerConfiguration serverConfiguration = newServerConfiguration();
+        serverConfiguration.setMetadataServiceUri(zkUtil.getMetadataServiceUri("/ledgers"));
+        startAndAddBookie(serverConfiguration);
+
         if (nFaultyBookies > 0) {
-            for (int i = 0; i<nFaultyBookies;i++) {
-                ServerConfiguration serverConfiguration = newServerConfiguration();
+            for (int i = 1; i<= nFaultyBookies;i++) {
+                serverConfiguration = newServerConfiguration();
                 serverConfiguration.setMetadataServiceUri(zkUtil.getMetadataServiceUri("/ledgers"));
                 ServerTester server = startAndAddBookie(serverConfiguration);
                 this.expectedFaultyBookies.add(server.getServer().getBookieId());
@@ -100,9 +104,16 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
             long threshold = confFaultyBookies.getBookieErrorThresholdPerInterval();
 
-            for (int i = 0; i < nFaultyBookies; i++) {
+            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bookieClientImpl,
+                    serverByIndex(0).getBookieId(), 1);
 
-                DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bookieClientImpl,
+            pool.errorCounter.getAndSet((int) --threshold);
+
+            bookieClientImpl.channels.put(serverByIndex(0).getBookieId(), pool);
+
+            for (int i = 1; i <= nFaultyBookies; i++) {
+
+                pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bookieClientImpl,
                         serverByIndex(i).getBookieId(), 1);
 
                 pool.errorCounter.getAndSet((int) ++threshold);
@@ -110,6 +121,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
                 bookieClientImpl.channels.put(serverByIndex(i).getBookieId(), pool);
 
             }
+
 
             this.expectedFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 
