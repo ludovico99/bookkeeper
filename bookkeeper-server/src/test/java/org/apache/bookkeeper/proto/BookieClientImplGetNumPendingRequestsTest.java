@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 
+import static org.apache.bookkeeper.proto.BookieClient.PENDINGREQ_NOTWRITABLE_MASK;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
@@ -122,9 +123,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             doNothing().when(spyInstance).checkTimeoutOnPendingOperations();
             doNothing().when(spyInstance).channelRead(isA(ChannelHandlerContext.class),isA(Object.class));
 
-            if(this.clientConfType.equals(ClientConfType.WRITABLE_PCBC))
-                when(spyInstance.isWritable()).thenReturn(false);
-
             Arrays.fill(pool.clients,spyInstance);
 
             for (long i = 0; i < this.numberPendingRequestToInsert; i++) {
@@ -147,6 +145,9 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                 bookieClientImpl.close();
             }
 
+            if(this.clientConfType.equals(ClientConfType.WRITABLE_PCBC))
+                when(spyInstance.isWritable()).thenReturn(false);
+
         }catch (Exception e){
             e.printStackTrace();
             //this.exceptionInConfigPhase = true;
@@ -168,7 +169,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 //                {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
 //                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
 //                {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
-                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.WRITABLE_PCBC,  0L},
+                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.WRITABLE_PCBC,  PENDINGREQ_NOTWRITABLE_MASK},
 
 
         }) ;
