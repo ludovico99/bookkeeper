@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
@@ -46,7 +46,6 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     private Object expectedForceLedger;
     private OrderedExecutor orderedExecutor;
     private Long ledgerId;
-    private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
     private  ClientConfType clientConfType;
     private BookieId bookieId;

@@ -31,6 +31,7 @@ import static org.apache.bookkeeper.proto.BookieClient.PENDINGREQ_NOTWRITABLE_MA
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
+@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperClusterTestCase {
 

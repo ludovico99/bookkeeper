@@ -49,6 +49,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     private ClientConfType clientConfType;
     private BookieId bookieId;
     private int writeRC;
+    private OrderedExecutor orderedExecutor;
 
 
     public BookieClientImplWriteThenReadLacTest(ParamType bookieId, long ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedWriteLac) {
@@ -66,39 +67,40 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
         try {
 
+            this.orderedExecutor = OrderedExecutor.newBuilder().build();
 
-        this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+            this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
+                    UnpooledByteBufAllocator.DEFAULT, this.orderedExecutor, Executors.newSingleThreadScheduledExecutor(
+                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-        switch (bookieId){
-            case VALID_INSTANCE:
-                break;
+            switch (bookieId) {
+                case VALID_INSTANCE:
+                    break;
 
-            case NULL_INSTANCE:
-                this.bookieId = null;
-                break;
+                case NULL_INSTANCE:
+                    this.bookieId = null;
+                    break;
 
-            case INVALID_INSTANCE:
-                this.bookieId = BookieId.parse("Bookie");
-                break;
+                case INVALID_INSTANCE:
+                    this.bookieId = BookieId.parse("Bookie");
+                    break;
 
-        }
+            }
 
-        switch (cb) {
-            case VALID_INSTANCE:
-                this.readLacCallback = readLacCallback();
-                break;
+            switch (cb) {
+                case VALID_INSTANCE:
+                    this.readLacCallback = readLacCallback();
+                    break;
 
-            case NULL_INSTANCE:
-                this.readLacCallback = null;
-                break;
+                case NULL_INSTANCE:
+                    this.readLacCallback = null;
+                    break;
 
-            case INVALID_INSTANCE:
-               //To be determined
-                break;
-        }
+                case INVALID_INSTANCE:
+                    //To be determined
+                    break;
+            }
         }catch (Exception e){
             e.printStackTrace();
             //this.exceptionInConfigPhase = true;
@@ -157,7 +159,28 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
             }
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
-            if (this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
+            switch (clientConfType){
+                case STD_CONF:
+                    break;
+                case CLOSED_CONFIG:
+                    this.bookieClientImpl.close();
+                    break;
+                case INVALID_CONFIG:
+                    DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , this.bookieClientImpl, bookieId, 1);
+
+                    pool.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool);
+                    break;
+                case REJECT_CONFIG:
+                    DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , this.bookieClientImpl, bookieId, 1);
+
+                    pool2.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool2);
+                    this.orderedExecutor.shutdown();
+                    break;
+            }
 
 
         }catch (Exception e){
@@ -179,7 +202,8 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.INVALID_INSTANCE,   -5L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException}
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.REJECT_CONFIG,   BKException.Code.InterruptedException},
         }) ;
     }
 

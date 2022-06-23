@@ -107,7 +107,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true; //Ci sono tanti errori nella connessione con Zookkeeper
+            //this.exceptionInConfigPhase = true; //Ci sono tanti errori nella connessione con Zookkeeper
         }
 
 
