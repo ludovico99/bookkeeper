@@ -44,8 +44,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     private BookkeeperInternalCallbacks.ReadLacCallback readLacCallback;
     private Object ctx;
     private Object expectedReadLac;
-    private Long ledgerId;
-    private ParamType ledgerIdParamType;
+    private long ledgerId;
     private ParamType bookieIdParamType;
     private int writeLacRC;
     private ClientConfType clientConfType;
@@ -54,18 +53,18 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
 
 
-    public BookieClientImplWriteThenReadLacTest(ParamType bookieId, ParamType ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedWriteLac) {
+    public BookieClientImplWriteThenReadLacTest(ParamType bookieId, long ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedWriteLac) {
         super(3);
         configureReadLac(bookieId, ledgerId, cb, ctx,clientConfType, expectedWriteLac);
     }
 
-    private void configureReadLac(ParamType bookieId, ParamType ledgerId, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedReadLac) {
+    private void configureReadLac(ParamType bookieId, long ledgerId, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedReadLac) {
 
         this.bookieIdParamType = bookieId;
         this.ctx = ctx;
         this.expectedReadLac = expectedReadLac;
-        this.ledgerIdParamType = ledgerId;
         this.clientConfType = clientConfType;
+        this.ledgerId = ledgerId;
 
         try {
 
@@ -89,20 +88,6 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
         }
 
-        switch (ledgerId) {
-            case VALID_INSTANCE:
-                break;
-
-            case NULL_INSTANCE:
-                this.ledgerId = null;
-                break;
-
-            case INVALID_INSTANCE:
-                this.ledgerId = -5L;
-                break;
-
-        }
-
         switch (cb) {
             case VALID_INSTANCE:
                 this.readLacCallback = readLacCallback();
@@ -113,13 +98,12 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 break;
 
             case INVALID_INSTANCE:
-               this.readLacCallback = (rc, ledgerId1, lac, buffer, ctx1) -> {
-               };
+               //To be determined
                 break;
         }
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -164,23 +148,23 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
             while(this.writeLacRC != BKException.Code.OK) {
                 counter.i = 1;
-                ByteBuf byteBuf2 = Unpooled.wrappedBuffer("Last add confirmed".getBytes(StandardCharsets.UTF_8));
+                ByteBuf byteBuf2 = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList2 = ByteBufList.get(byteBuf2);
 
                 this.bookieClientImpl.writeLac(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         entryId, byteBufList2, writeLacCallback(), counter);
 
+
                 counter.wait(0);
             }
 
-            if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
-            if (this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getLedgerMetadata().getLedgerId();
+            if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
             if (this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -190,14 +174,14 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                         Led_ID                          ReadLacCallback                   ctx          client conf                     RaiseException
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.OK},
-                { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        true},
-                { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        true},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.NoSuchEntryException},
-                { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException}
+                //Bookie_ID                     Led_ID         ReadLacCallback            ctx             client conf                     RaiseException
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.OK},
+                { ParamType.NULL_INSTANCE,       0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        true},
+                { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.NoSuchEntryException},
+                { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
+                { ParamType.INVALID_INSTANCE,   -5L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
+//                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
+//                { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException}
         }) ;
     }
 
@@ -210,6 +194,9 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                     " been thrown.", true);
         else {
             try {
+
+                while(this.bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0) wait(100);
+
                 ((Counter)this.ctx).inc();
 
                 this.bookieClientImpl.readLac(this.bookieId, this.ledgerId, this.readLacCallback, this.ctx);
