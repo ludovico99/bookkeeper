@@ -46,9 +46,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     private Object ctx;
     private Object expectedRead;
     private Long ledgerId;
-    private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
-    private ParamType entryIdIdParamType;
     private ClientConfType clientConfTypeEnum;
     private BookieId bookieId;
     private Long entryId;
@@ -57,22 +55,22 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
 
 
-    public BookieClientImplAddThenReadEntryTest(ParamType bookieId, ParamType ledgerId , ParamType entryId, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedReadLac) {
+    public BookieClientImplAddThenReadEntryTest(ParamType bookieId, long ledgerId , long entryId, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedReadLac) {
         super(3);
         configureAddThenRead(bookieId, ledgerId, entryId, cb, ctx, flags, clientConfType, expectedReadLac);
 
     }
 
 
-    private void configureAddThenRead(ParamType bookieId, ParamType ledgerId, ParamType entryId, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedReadLac) {
+    private void configureAddThenRead(ParamType bookieId, long ledgerId, long entryId, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedReadLac) {
 
         this.bookieIdParamType = bookieId;
-        this.ledgerIdParamType = ledgerId;
-        this.entryIdIdParamType = entryId;
         this.clientConfTypeEnum = clientConfType;
         this.ctx = ctx;
         this.flags = flags;
         this.expectedRead = expectedReadLac;
+        this.ledgerId = ledgerId;
+        this.entryId = entryId;
 
         try {
 
@@ -91,34 +89,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
                 case INVALID_INSTANCE:
                     this.bookieId = BookieId.parse("Bookie");
-                    break;
-
-            }
-
-            switch (ledgerId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case NULL_INSTANCE:
-                    this.ledgerId = null;
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.ledgerId = -5L;
-                    break;
-
-            }
-
-            switch (entryId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case NULL_INSTANCE:
-                    this.entryId = null;
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.entryId = -5L;
                     break;
 
             }
@@ -176,14 +146,12 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             }
 
             if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
-            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
-            if(this.entryIdIdParamType.equals(ParamType.VALID_INSTANCE)) this.entryId = entryId;
             if(this.clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -193,15 +161,14 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                    //Bookie_ID                   Ledger_id                   Entry_id                         ReadEntryCallback           Object                 Flags           ClientConf                        Raise exception
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.NoSuchLedgerExistsException},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.TimeoutException},
-                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,    ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,     ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY,  ClientConfType.CLOSED_CONFIG,      true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,    ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,  new Counter(), BookieProtocol.READENTRY,  ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
+                    //Bookie_ID            Ledger_id   Entry_id   ReadEntryCallback           Object                 Flags           ClientConf                        Raise exception
+                {  ParamType.VALID_INSTANCE,      0L,    0L,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.INVALID_INSTANCE,    0L,    0L,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
+                {  ParamType.VALID_INSTANCE,      -5L,   0L,     ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.NoSuchLedgerExistsException},
+                {  ParamType.VALID_INSTANCE,       0L,    -5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          BKException.Code.TimeoutException},
+                {  ParamType.NULL_INSTANCE,        0L,     5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ClientConfType.STD_CONF,          true},
+                {  ParamType.VALID_INSTANCE,      -5L,   -5L,    ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY,  ClientConfType.STD_CONF,         BKException.Code.NoSuchLedgerExistsException},
+                {  ParamType.VALID_INSTANCE,      0L,    0L,     ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY,  ClientConfType.CLOSED_CONFIG,    BKException.Code.ClientClosedException}
 
         }) ;
     }
@@ -215,6 +182,8 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                     " been thrown.", true);
         else {
             try {
+
+                while(this.bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0) wait(100);
 
                 ((Counter)this.ctx).inc();
 

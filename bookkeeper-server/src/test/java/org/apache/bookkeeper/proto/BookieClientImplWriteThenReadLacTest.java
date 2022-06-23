@@ -31,7 +31,6 @@ import java.util.concurrent.Executors;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestCase {
 
