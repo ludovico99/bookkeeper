@@ -5,5 +5,6 @@ public enum ClientConfType {
     STD_CONF,
     NO_STD_CONF,
     CLOSED_CONFIG,
-    REJECT_CONFIG
+    REJECT_CONFIG,
+    WRITABLE_PCBC
 }
