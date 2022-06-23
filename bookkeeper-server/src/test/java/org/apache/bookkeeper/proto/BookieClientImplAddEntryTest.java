@@ -32,7 +32,6 @@ import java.util.concurrent.Executors;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
 
@@ -65,18 +64,18 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
     private Long entryId;
 
 
-    public BookieClientImplAddEntryTest(ParamType bookieId, ParamType ledgerId, byte[] ms, ParamType entryId, ByteBufList toSend, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedAdd) {
+    public BookieClientImplAddEntryTest(ParamType bookieId, long ledgerId, byte[] ms, long entryId, ByteBufList toSend, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedAdd) {
         super(3);
         configureAdd(bookieId, ledgerId, ms, entryId, toSend, cb, ctx, flags, clientConfType, expectedAdd);
 
     }
 
 
-    private void configureAdd(ParamType bookieId, ParamType ledgerId, byte[] ms, ParamType entryId,ByteBufList toSend, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedAdd) {
+    private void configureAdd(ParamType bookieId, long ledgerId, byte[] ms, long entryId,ByteBufList toSend, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedAdd) {
 
         this.bookieIdParamType = bookieId;
-        this.ledgerIdParamType = ledgerId;
-        this.entryIdIdParamType = entryId;
+        this.ledgerId = ledgerId;
+        this.entryId = entryId;
         this.clientConfTypeEnum = clientConfType;
         this.ctx = ctx;
         this.flags = flags;
@@ -105,33 +104,6 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
 
             }
 
-            switch (ledgerId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case NULL_INSTANCE:
-                    this.ledgerId = null;
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.ledgerId = -5L;
-                    break;
-
-            }
-
-            switch (entryId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case NULL_INSTANCE:
-                    this.entryId = null;
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.entryId = -5L;
-                    break;
-
-            }
 
             switch (cb) {
                 case VALID_INSTANCE:
@@ -149,7 +121,7 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
 
@@ -175,8 +147,6 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
 
 
             if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
-            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE))      this.ledgerId = handle.getId();
-            if(this.entryIdIdParamType.equals(ParamType.VALID_INSTANCE))    this.entryId = entryId;
             if(this.clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
 
@@ -202,19 +172,17 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
 
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                       Ledger_id                    Master key        Entry_id                    toSend,                      ReadEntryCallback,         Object          Flags                    ClientConf                        Raise exception
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE, validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.INVALID_INSTANCE, byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.INVALID_INSTANCE, byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,    validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.NULL_INSTANCE,    byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.CLOSED_CONFIG,     true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   null,                        ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   ParamType.VALID_INSTANCE,   emptyByteBufList,            ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.WriteException},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   notValidMasterKey,ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
-//                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   null,             ParamType.VALID_INSTANCE,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK}
+                //Bookie_ID                   Ledger_id   Master key   Entry_id   toSend,                      ReadEntryCallback,         Object          Flags                    ClientConf                        Raise exception
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.INVALID_INSTANCE,    0L,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
+                {  ParamType.VALID_INSTANCE,     -5L,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,  -5L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.NULL_INSTANCE,       0L,   validMasterKey,  -5L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          true},
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException},
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,   0L,   null,                        ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          true},
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,   0L,   emptyByteBufList,            ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.WriteException},
+                {  ParamType.VALID_INSTANCE,      0L,   notValidMasterKey,0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.ADDENTRY, ClientConfType.STD_CONF,          BKException.Code.OK},
+
 
 
         }) ;

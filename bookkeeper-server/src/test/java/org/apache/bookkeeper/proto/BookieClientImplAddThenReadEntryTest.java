@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-@Ignore
+
 @RunWith(value = Parameterized.class)
 public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestCase {
 
@@ -108,7 +108,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             }
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
 
@@ -126,7 +126,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
             //Sincrona
-            long entryId = handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
+            handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),

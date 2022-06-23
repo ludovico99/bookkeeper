@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-@Ignore
+
 @RunWith(value = Parameterized.class)
 public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
@@ -53,19 +53,19 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     private int lastRc;
 
 
-    public BookieClientImplForceLedgerTest(ParamType bookieId, ParamType ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {
+    public BookieClientImplForceLedgerTest(ParamType bookieId, long ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {
         super(3);
         configureForceLedger(bookieId, ledgerId, cb, ctx,clientConfType, expectedForceLedger);
 
     }
 
-    private void configureForceLedger(ParamType bookieId, ParamType ledgerId, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {
+    private void configureForceLedger(ParamType bookieId, long ledgerId, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {
 
         this.bookieIdParamType = bookieId;
         this.ctx = ctx;
         this.expectedForceLedger = expectedForceLedger;
-        this.ledgerIdParamType = ledgerId;
         this.clientConfType = clientConfType;
+        this.ledgerId = ledgerId;
 
         try {
 
@@ -91,19 +91,6 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
             }
 
-            switch (ledgerId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case NULL_INSTANCE:
-                    this.ledgerId = null;
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.ledgerId = -5L;
-                    break;
-
-            }
 
             switch (cb) {
                 case VALID_INSTANCE:
@@ -120,7 +107,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             }
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -164,7 +151,6 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
-            if (this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
 
             switch (clientConfType){
                 case STD_CONF:
@@ -190,7 +176,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             }
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -200,16 +186,15 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                         Led_ID                           ForceLedgerCallback        ctx          client conf                     RaiseException
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
-                { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        true},
-                { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        true},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
-                { ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.REJECT_CONFIG,  BKException.Code.InterruptedException},
+                //Bookie_ID                    Led_ID          ForceLedgerCallback        ctx            client conf                     RaiseException
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
+                { ParamType.NULL_INSTANCE,       0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        true},
+                { ParamType.VALID_INSTANCE,     -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
+                { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.REJECT_CONFIG,   BKException.Code.InterruptedException},
         }) ;
     }
 

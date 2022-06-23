@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-@Ignore
+
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClusterTestCase {
 
@@ -38,7 +38,6 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
     private Object expectedGetListsOfEntriesLedger;
     private Long ledgerId;
-    private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
     private OrderedExecutor orderedExecutor;
     private ClientConfType clientConfType;
@@ -48,18 +47,19 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
 
 
-    public BookieClientImplGetListsOfEntriesLedgerTest(ParamType bookieId, ParamType ledgerId, ClientConfType clientConfType) {
+    public BookieClientImplGetListsOfEntriesLedgerTest(ParamType bookieId, long ledgerId, ClientConfType clientConfType, Object expected) {
         super(3);
-        configureAddThenRead(bookieId, ledgerId, clientConfType);
+        configureAddThenRead(bookieId, ledgerId, clientConfType, expected);
 
     }
 
 
-    private void configureAddThenRead(ParamType bookieId, ParamType ledgerId, ClientConfType clientConfType) {
+    private void configureAddThenRead(ParamType bookieId, long ledgerId, ClientConfType clientConfType, Object expected) {
 
         this.bookieIdParamType = bookieId;
-        this.ledgerIdParamType = ledgerId;
+        this.ledgerId = ledgerId;
         this.clientConfType = clientConfType;
+        this.expectedGetListsOfEntriesLedger = expected;
 
         try {
 
@@ -72,51 +72,21 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
             switch (bookieId) {
                 case VALID_INSTANCE:
-                    if (ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.expectedGetListsOfEntriesLedger = 1L;
                     break;
 
                 case NULL_INSTANCE:
                     this.bookieId = null;
-                    this.expectedGetListsOfEntriesLedger = true;
                     break;
 
                 case INVALID_INSTANCE:
                     this.bookieId = BookieId.parse("Bookie-1");
-                    this.expectedGetListsOfEntriesLedger = true;
-                    break;
-
-            }
-
-            switch (ledgerId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case NULL_INSTANCE:
-                    this.ledgerId = null;
-                    this.expectedGetListsOfEntriesLedger = true;
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.ledgerId = -5L;
-                    this.expectedGetListsOfEntriesLedger = true;
-                    break;
-
-            }
-
-            switch (clientConfType){
-                case STD_CONF:
-                    break;
-                case INVALID_CONFIG:
-                case CLOSED_CONFIG:
-                case REJECT_CONFIG:
-                    this.expectedGetListsOfEntriesLedger = true;
                     break;
 
             }
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
 
@@ -155,8 +125,6 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
             }
 
             if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
-            if(this.ledgerIdParamType.equals(ParamType.VALID_INSTANCE)) this.ledgerId = handle.getId();
-
 
             switch (clientConfType){
                 case STD_CONF:
@@ -185,7 +153,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -195,24 +163,21 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                       Ledger_id                     Client config
-                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-                {  ParamType.VALID_INSTANCE,     ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
-                {  ParamType.VALID_INSTANCE,     ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+                //Bookie_ID                 Ledger_id     Client config
+                {  ParamType.VALID_INSTANCE,     0L,      ClientConfType.STD_CONF, 1L},
+                {  ParamType.VALID_INSTANCE,     -5L,     ClientConfType.STD_CONF, true},
 
-                {  ParamType.INVALID_INSTANCE,   ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-                {  ParamType.INVALID_INSTANCE,   ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
-                {  ParamType.INVALID_INSTANCE,   ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+                {  ParamType.INVALID_INSTANCE,   0L,      ClientConfType.STD_CONF, true},
+                {  ParamType.INVALID_INSTANCE,   -5L,     ClientConfType.STD_CONF, true},
 
-                {  ParamType.NULL_INSTANCE,      ParamType.VALID_INSTANCE,      ClientConfType.STD_CONF},
-                {  ParamType.NULL_INSTANCE,      ParamType.INVALID_INSTANCE,    ClientConfType.STD_CONF},
-                {  ParamType.NULL_INSTANCE,      ParamType.NULL_INSTANCE,       ClientConfType.STD_CONF},
+                {  ParamType.NULL_INSTANCE,      0L,      ClientConfType.STD_CONF,  true},
+                {  ParamType.NULL_INSTANCE,      -5L,     ClientConfType.STD_CONF,  true},
 
-                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.INVALID_CONFIG},
+                {  ParamType.VALID_INSTANCE,     0L,      ClientConfType.INVALID_CONFIG, true},
 
-                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.REJECT_CONFIG},
+                {  ParamType.VALID_INSTANCE,     0L,      ClientConfType.REJECT_CONFIG,  true},
 
-                {  ParamType.VALID_INSTANCE,     ParamType.VALID_INSTANCE,      ClientConfType.CLOSED_CONFIG},
+                {  ParamType.VALID_INSTANCE,     0L,      ClientConfType.CLOSED_CONFIG,  true},
 
         }) ;
     }
@@ -227,6 +192,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
                     " been thrown.", true);
         else {
             try {
+                while(this.bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0) wait(100);
 
                 AvailabilityOfEntriesOfLedger entriesOfLedger = this.bookieClientImpl.getListOfEntriesOfLedger(this.bookieId, this.ledgerId).join();
                 Assert.assertEquals(this.expectedGetListsOfEntriesLedger ,entriesOfLedger.getTotalNumOfAvailableEntries());

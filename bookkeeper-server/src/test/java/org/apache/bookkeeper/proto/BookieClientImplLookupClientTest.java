@@ -22,7 +22,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase {
 
@@ -32,8 +31,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
     private BookieClientImpl bookieClient;
     private BookieId bookieId;
     private Object expectedLookupClient;
-    private Boolean expectedNullPointerEx = false;
-    private Boolean expectedIllegalArgumentException = false;
+
 
 
     public BookieClientImplLookupClientTest(ParamType BookieId, ClientConfType bookieClient) {
@@ -99,7 +97,6 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
                            break;
                        case INVALID_CONFIG:
                            this.expectedLookupClient = new IllegalArgumentException();
-                           this.expectedIllegalArgumentException = true;
                            this.bookieClient = invalidConfig;
                            break;
                        case CLOSED_CONFIG:
@@ -111,7 +108,6 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
 
                case NULL_INSTANCE:
                    this.bookieId = null;
-                   this.expectedNullPointerEx = true;
                    this.expectedLookupClient = new NullPointerException();
                    switch (bookieClient) {
                        case STD_CONF:
@@ -131,7 +127,7 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
        }catch (Exception e){
 
            e.printStackTrace();
-           this.exceptionInConfigPhase = true;
+           //this.exceptionInConfigPhase = true;
        }
 
     }
@@ -141,15 +137,17 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(new Object[][]{
                 //BookieId,                  Class Config,
-                {ParamType.VALID_INSTANCE, ClientConfType.STD_CONF},
-                {ParamType.VALID_INSTANCE, ClientConfType.INVALID_CONFIG},
-                {ParamType.VALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
+                {ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF},
+                {ParamType.VALID_INSTANCE,   ClientConfType.INVALID_CONFIG},
+                {ParamType.VALID_INSTANCE,   ClientConfType.CLOSED_CONFIG},
+
                 {ParamType.INVALID_INSTANCE, ClientConfType.STD_CONF},
                 {ParamType.INVALID_INSTANCE, ClientConfType.INVALID_CONFIG},
                 {ParamType.INVALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
-                {ParamType.NULL_INSTANCE, ClientConfType.STD_CONF},
-                {ParamType.NULL_INSTANCE, ClientConfType.INVALID_CONFIG},
-                {ParamType.NULL_INSTANCE, ClientConfType.CLOSED_CONFIG}
+
+                {ParamType.NULL_INSTANCE,    ClientConfType.STD_CONF},
+                {ParamType.NULL_INSTANCE,    ClientConfType.INVALID_CONFIG},
+                {ParamType.NULL_INSTANCE,    ClientConfType.CLOSED_CONFIG}
 
         });
     }
@@ -165,19 +163,13 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
             Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
-            if (this.expectedNullPointerEx || this.expectedIllegalArgumentException) {
-                try {
-                    this.bookieClient.lookupClient(this.bookieId);
-                } catch (NullPointerException  | IllegalArgumentException e) {
-                    Assert.assertEquals("Exception that I expect was raised", this.expectedLookupClient.getClass(), e.getClass());
-                }
-
-            } else Assert.assertEquals(this.expectedLookupClient, this.bookieClient.lookupClient(this.bookieId));
-
+            try {
+                PerChannelBookieClientPool client = this.bookieClient.lookupClient(this.bookieId);
+                Assert.assertEquals("Expected instance", this.expectedLookupClient, client);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Assert.assertEquals("Exception that I expect was raised", this.expectedLookupClient.getClass(), e.getClass());
+            }
         }
     }
-
-
-
-
 }
