@@ -30,6 +30,7 @@ public class BookieClientImplLookupClientTest  {
     private BookieClientImpl bookieClient;
     private BookieId bookieId;
     private Object expectedLookupClient;
+    private ParamType bookieIdParamType;
 
 
 
@@ -40,7 +41,7 @@ public class BookieClientImplLookupClientTest  {
     }
 
     private void configureLookupClient(ParamType bookieId, ClientConfType bookieClient) {
-
+        this.bookieIdParamType = bookieId;
 
        try {
            ClientConfiguration confLookupValid=TestBKConfiguration.newClientConfiguration();
@@ -89,8 +90,7 @@ public class BookieClientImplLookupClientTest  {
                    this.bookieId = BookieId.parse("Bookie-2");
                    switch (bookieClient) {
                        case STD_CONF:
-                           this.expectedLookupClient = new DefaultPerChannelBookieClientPool(confLookupValid, validConfig,
-                                   BookieId.parse("Bookie-2"), 1);
+                           this.expectedLookupClient = false;
                            this.bookieClient = validConfig;
                            break;
                        case INVALID_CONFIG:
@@ -103,6 +103,7 @@ public class BookieClientImplLookupClientTest  {
                            this.bookieClient = validConfig;
                            break;
                    }
+                   break;
 
                case NULL_INSTANCE:
                    this.bookieId = null;
@@ -163,7 +164,10 @@ public class BookieClientImplLookupClientTest  {
         else {
             try {
                 PerChannelBookieClientPool client = this.bookieClient.lookupClient(this.bookieId);
-                Assert.assertEquals("Expected instance", this.expectedLookupClient, client);
+                if(bookieIdParamType == ParamType.INVALID_INSTANCE){
+                    Assert.assertFalse((Boolean) this.expectedLookupClient);
+                }
+               else Assert.assertEquals("Expected instance", this.expectedLookupClient, client);
             } catch (Exception e) {
                 e.printStackTrace();
                 Assert.assertEquals("Exception that I expect was raised", this.expectedLookupClient.getClass(), e.getClass());
