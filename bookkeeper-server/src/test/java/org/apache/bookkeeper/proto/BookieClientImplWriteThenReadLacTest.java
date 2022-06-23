@@ -126,11 +126,9 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                             "masterKey".getBytes(StandardCharsets.UTF_8));
 
             Counter counter = new Counter();
-            counter.inc();
 
             while(this.writeRC != BKException.Code.OK) {
-
-                System.out.println("Retry");
+                counter.i = 1;
 
                 ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
                 ByteBufList byteBufList = ByteBufList.get(byteBuf);
@@ -139,12 +137,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                         entryId, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
                 counter.wait(0);
-
-                System.out.println("Add entry completed");
+                
             }
 
             counter = new Counter();
-
 
             while(this.writeLacRC != BKException.Code.OK) {
                 counter.i = 1;
@@ -153,7 +149,6 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
 
                 this.bookieClientImpl.writeLac(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
                         entryId, byteBufList2, writeLacCallback(), counter);
-
 
                 counter.wait(0);
             }
@@ -198,7 +193,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 //Bookie_ID                     Led_ID         ReadLacCallback            ctx             client conf                     RaiseException
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.OK},
                 { ParamType.NULL_INSTANCE,       0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        true},
-                { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.NoSuchEntryException},
+                { ParamType.VALID_INSTANCE,     -5L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.NoSuchEntryException},
                 { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.INVALID_INSTANCE,   -5L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
