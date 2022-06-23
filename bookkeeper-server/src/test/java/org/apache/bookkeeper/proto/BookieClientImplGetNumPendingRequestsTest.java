@@ -112,8 +112,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.clientConf, bookieClientImpl,
                     bookieId, 1);
 
-            if(this.clientConfType.equals(ClientConfType.WRITABLE_PCBC)) pool.clients[0].setWritable(false);
-
             this.bookieClientImpl.channels.put(bookieId, pool);
 
             PerChannelBookieClient spyInstance = spy(this.bookieClientImpl.create(bookieId, pool,
@@ -123,6 +121,9 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             doNothing().when(spyInstance).errorOut(isA(PerChannelBookieClient.CompletionKey.class), isA(int.class));
             doNothing().when(spyInstance).checkTimeoutOnPendingOperations();
             doNothing().when(spyInstance).channelRead(isA(ChannelHandlerContext.class),isA(Object.class));
+
+            if(this.clientConfType.equals(ClientConfType.WRITABLE_PCBC))
+                when(spyInstance.isWritable()).thenReturn(false);
 
             Arrays.fill(pool.clients,spyInstance);
 
@@ -159,14 +160,14 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
         return Arrays.asList(new Object[][]{
                 // Bookie Id,            ledger Id,   Client conf type,            Expected Value
-                {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     20L },
-                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     0L},
-                {ParamType.INVALID_INSTANCE,  0L,    ClientConfType.STD_CONF,     true },
-                {ParamType.INVALID_INSTANCE, -5L,    ClientConfType.STD_CONF,     true },
-                {ParamType.NULL_INSTANCE,     0L,    ClientConfType.STD_CONF,     true },
-                {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
-                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
-                {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
+//                {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     20L },
+//                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     0L},
+//                {ParamType.INVALID_INSTANCE,  0L,    ClientConfType.STD_CONF,     true },
+//                {ParamType.INVALID_INSTANCE, -5L,    ClientConfType.STD_CONF,     true },
+//                {ParamType.NULL_INSTANCE,     0L,    ClientConfType.STD_CONF,     true },
+//                {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
+//                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
+//                {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
                 {ParamType.VALID_INSTANCE,     0L,   ClientConfType.WRITABLE_PCBC,  0L},
 
 
