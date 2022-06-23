@@ -19,7 +19,6 @@ import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.tls.SecurityProviderFactoryFactory;
 import org.apache.bookkeeper.util.ByteBufList;
 import org.apache.bookkeeper.util.ClientConfType;
-import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -61,6 +60,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         this.clientConfType = clientConfType;
         this.expectedNumPendingRequests = expected;
         this.ledgerId = ledgerId;
+        this.numberPendingRequestToInsert = 20L;
 
         try {
 
@@ -74,17 +74,16 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             switch (bookieId) {
                 case VALID_INSTANCE:
-                    this.numberPendingRequestToInsert = (Long) expected;
-                    break;
+                    if (clientConfType == ClientConfType.STD_CONF) {
+                        this.numberPendingRequestToInsert = (Long) expected;
+                    }
 
                 case NULL_INSTANCE:
                     this.bookieId = null;
-                    this.numberPendingRequestToInsert = 1L;
                     break;
 
                 case INVALID_INSTANCE:
                     this.bookieId = BookieId.parse("");
-                    this.numberPendingRequestToInsert = 1L;
                     break;
             }
 
@@ -123,6 +122,8 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             doNothing().when(spyInstance).checkTimeoutOnPendingOperations();
             doNothing().when(spyInstance).channelRead(isA(ChannelHandlerContext.class),isA(Object.class));
 
+            if(this.clientConfType.equals(ClientConfType.NOT_WRITABLE_PCBC)) when(spyInstance.isWritable()).thenReturn(false);
+
             Arrays.fill(pool.clients,spyInstance);
 
             for (long i = 0; i < this.numberPendingRequestToInsert; i++) {
@@ -145,8 +146,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                 bookieClientImpl.close();
             }
 
-            if(this.clientConfType.equals(ClientConfType.WRITABLE_PCBC))
-                when(spyInstance.isWritable()).thenReturn(false);
 
         }catch (Exception e){
             e.printStackTrace();
@@ -162,14 +161,14 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         return Arrays.asList(new Object[][]{
                 // Bookie Id,            ledger Id,   Client conf type,            Expected Value
                 {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     20L },
-                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     0L},
+                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     20L},
                 {ParamType.INVALID_INSTANCE,  0L,    ClientConfType.STD_CONF,     true },
                 {ParamType.INVALID_INSTANCE, -5L,    ClientConfType.STD_CONF,     true },
                 {ParamType.NULL_INSTANCE,     0L,    ClientConfType.STD_CONF,     true },
                 {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
                 {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
                 {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
-                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.WRITABLE_PCBC,  PENDINGREQ_NOTWRITABLE_MASK},
+                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.NOT_WRITABLE_PCBC,  20L | PENDINGREQ_NOTWRITABLE_MASK},
 
 
         }) ;
