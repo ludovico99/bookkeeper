@@ -15,6 +15,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
+import org.apache.bookkeeper.tls.SecurityException;
 import org.apache.bookkeeper.tls.SecurityHandlerFactory;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
@@ -35,7 +36,7 @@ public class BookieClientImplCreateTest{
 
     //Test: create(BookieId address, PerChannelBookieClientPool pcbcPool,
     //            SecurityHandlerFactory shFactory, boolean forceUseV3)
-    private Object expectedCreate = false;
+    private Boolean expectedCreate = false;
     private PerChannelBookieClientPool pcbcPool;
     private ParamType pcbcPoolParamType;
     private SecurityHandlerFactory shFactory;
@@ -45,11 +46,11 @@ public class BookieClientImplCreateTest{
 
 
     public BookieClientImplCreateTest(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory,boolean forceUseV3) {
-        configureForceLedger(bookieId, perChannelBookieClientPool, shFactory, forceUseV3);
+        configureCreateTest(bookieId, perChannelBookieClientPool, shFactory, forceUseV3);
 
     }
 
-    private void configureForceLedger(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory, boolean forceUseV3) {
+    private void configureCreateTest(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory, boolean forceUseV3) {
         this.pcbcPoolParamType = perChannelBookieClientPool;
         this.forceUseV3 = forceUseV3;
 
@@ -86,22 +87,19 @@ public class BookieClientImplCreateTest{
                     this.bookieId = BookieId.parse("Bookie-1");
                     switch (perChannelBookieClientPool) {
                         case VALID_INSTANCE:
-                            this.pcbcPool = new DefaultPerChannelBookieClientPool(this.clientConfiguration,
-                                    this.bookieClientImpl, this.bookieId,1);
-                            this.expectedCreate = new PerChannelBookieClient(this.clientConfiguration,orderedExecutor,eventLoopGroup,
-                                    byteBufAllocator,this.bookieId,logger,factory,registry,this.pcbcPool,this.shFactory,bookieAddressResolver);
+                            this.expectedCreate = false;
                             break;
 
                         case NULL_INSTANCE:
                             this.pcbcPool = null;
+                            this.expectedCreate = false;
                             break;
 
                         case INVALID_INSTANCE:
                             this.expectedCreate = true;
                             break;
-
-
                     }
+                    break;
 
                 case NULL_INSTANCE:
                     this.bookieId = null;
@@ -113,7 +111,7 @@ public class BookieClientImplCreateTest{
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -133,7 +131,7 @@ public class BookieClientImplCreateTest{
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  false},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  true},
                 { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  false},
-                { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  false},
+                { ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  false},
                 { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  true},
                 { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  true}
 
@@ -142,25 +140,32 @@ public class BookieClientImplCreateTest{
 
 
     @Test
-    public void test_forceLedger() {
+    public void test_CreateTest() {
 
         if (this.exceptionInConfigPhase)
             Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
-            try {
+            if(this.pcbcPoolParamType.compareTo(ParamType.INVALID_INSTANCE)==0) {
+                try {
+                    this.pcbcPool = new DefaultPerChannelBookieClientPool(clientConfiguration, bookieClientImpl, this.bookieId, 0);
+                    Assert.fail("Test case has failed");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Assert.assertTrue("Invalid istance for PerChannelBookieClientPool",(Boolean) this.expectedCreate);
+                }
+            } else {
 
-                if(this.pcbcPoolParamType.equals(ParamType.INVALID_INSTANCE)) this.pcbcPool = new DefaultPerChannelBookieClientPool(clientConfiguration,bookieClientImpl,
-                        this.bookieId,0);
+                try {
+                    PerChannelBookieClient perChannelBookieClient = this.bookieClientImpl.create(this.bookieId, this.pcbcPool, this.shFactory, this.forceUseV3);
+                    Assert.assertNotNull(perChannelBookieClient);
+                    Assert.assertFalse("No exception was expected", this.expectedCreate);
 
-                Assert.assertEquals(this.expectedCreate, this.bookieClientImpl.create(this.bookieId, this.pcbcPool, this.shFactory, this.forceUseV3));
-                Assert.fail("Test case has failed");
-
-            } catch (Exception e){
-                Assert.assertTrue("An exception was expected", (Boolean) this.expectedCreate);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Assert.assertTrue("An exception was expected",  this.expectedCreate);
+                }
             }
-
         }
     }
-
 }

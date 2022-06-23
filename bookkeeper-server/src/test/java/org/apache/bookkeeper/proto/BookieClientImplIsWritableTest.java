@@ -6,14 +6,11 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
 import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
-import org.apache.bookkeeper.meta.CleanupLedgerManager;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
-import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,7 +18,7 @@ import org.junit.runners.Parameterized;
 import java.util.*;
 import java.util.concurrent.Executors;
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public class BookieClientImplIsWritableTest  {
 
@@ -101,7 +98,7 @@ public class BookieClientImplIsWritableTest  {
         }
         catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
