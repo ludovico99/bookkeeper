@@ -47,7 +47,6 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
     private Long ledgerId;
     private ByteBufList toSend;
     private byte[] ms;
-    private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
     private ClientConfType clientConfType;
     private OrderedExecutor orderedExecutor;
@@ -56,23 +55,23 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
     private int lastRc = -1;
 
 
-    public BookieClientImplWriteLacTest(ParamType bookieId, ParamType ledgerId, byte[] ms, long lac, ByteBufList toSend, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedWriteLac) {
+    public BookieClientImplWriteLacTest(ParamType bookieId, long ledgerId, byte[] ms, long lac, ByteBufList toSend, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedWriteLac) {
         super(3);
         configureAdd(bookieId, ledgerId, ms, lac, toSend, cb, ctx, clientConfType, expectedWriteLac);
 
     }
 
 
-    private void configureAdd(ParamType bookieId, ParamType ledgerId, byte[] ms, long lac, ByteBufList toSend, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedAdd) {
+    private void configureAdd(ParamType bookieId, long ledgerId, byte[] ms, long lac, ByteBufList toSend, ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedAdd) {
 
         this.bookieIdParamType = bookieId;
-        this.ledgerIdParamType = ledgerId;
         this.clientConfType = clientConfType;
         this.ctx = ctx;
         this.expectedWriteLac = expectedAdd;
         this.ms = ms;
         this.toSend = toSend;
         this.lac = lac;
+        this.ledgerId = ledgerId;
 
         try {
 
@@ -97,15 +96,6 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
             }
 
-            switch (ledgerId) {
-                case VALID_INSTANCE:
-                    break;
-
-                case INVALID_INSTANCE:
-                    this.ledgerId = -5L;
-                    break;
-
-            }
 
             switch (cb) {
                 case VALID_INSTANCE:
@@ -161,20 +151,13 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
             }
 
             if(bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
-            if(ledgerIdParamType.equals(ParamType.VALID_INSTANCE))      this.ledgerId = handle.getId();
+
 
             switch (this.clientConfType){
                 case STD_CONF:
                     break;
                 case CLOSED_CONFIG:
                     this.bookieClientImpl.close();
-                    break;
-                case INVALID_CONFIG:
-                    DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
-                            , this.bookieClientImpl, bookieId, 1);
-
-                    pool.clients[0].close();
-                    this.bookieClientImpl.channels.put(bookieId, pool);
                     break;
                 case REJECT_CONFIG:
                     DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
@@ -189,7 +172,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -209,18 +192,17 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                       Ledger_id                    Master key      LAC    toSend,                      ReadEntryCallback,         Object           ClientConf                        Raise exception
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.INVALID_INSTANCE,    ParamType.VALID_INSTANCE,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE, validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   -5L, byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,   validMasterKey,   -5L, byteBufList,                 ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   0L,   null,                        ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   0L,   emptyByteBufList,            ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.WriteException},
-                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   notValidMasterKey,0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.UnauthorizedAccessException},
-//                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.REJECT_CONFIG,     BKException.Code.InterruptedException},
-//                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.INVALID_CONFIG,    BKException.Code.ClientClosedException}
-//                {  ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,   validMasterKey,   0L,   byteBufList,                 ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException},
+                //Bookie_ID                   Ledger_id,   Master key   LAC    toSend,            WriteLacCallBack,         Object           ClientConf                        Raise exception
+                {  ParamType.VALID_INSTANCE,     0L,   validMasterKey,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.INVALID_INSTANCE,   0L,   validMasterKey,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
+                {  ParamType.VALID_INSTANCE,     -5L,  validMasterKey,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.VALID_INSTANCE,      0L,  validMasterKey,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.NULL_INSTANCE,       0L,  validMasterKey,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          true},
+                {  ParamType.VALID_INSTANCE,      0L,  validMasterKey,   0L,   null,              ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true},
+                {  ParamType.VALID_INSTANCE,      0L,  validMasterKey,   0L,   emptyByteBufList,  ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.WriteException},
+                {  ParamType.VALID_INSTANCE,      0L,  notValidMasterKey,0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.UnauthorizedAccessException},
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,   0L,   byteBufList,      ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.REJECT_CONFIG,     BKException.Code.InterruptedException},
+                {  ParamType.VALID_INSTANCE,      0L,   validMasterKey,   0L,   byteBufList,      ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.CLOSED_CONFIG,     BKException.Code.ClientClosedException}
 
 
         }) ;
