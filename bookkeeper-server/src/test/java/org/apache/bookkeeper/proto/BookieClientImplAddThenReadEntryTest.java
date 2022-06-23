@@ -45,11 +45,11 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     private int flags;
     private Object ctx;
     private Object expectedRead;
-    private Long ledgerId;
+    private long ledgerId;
     private ParamType bookieIdParamType;
     private ClientConfType clientConfTypeEnum;
     private BookieId bookieId;
-    private Long entryId;
+    private long entryId;
     private int lastRC = -1;
 
 
@@ -182,8 +182,6 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
                     " been thrown.", true);
         else {
             try {
-
-                while(this.bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0) wait(100);
 
                 ((Counter)this.ctx).inc();
 

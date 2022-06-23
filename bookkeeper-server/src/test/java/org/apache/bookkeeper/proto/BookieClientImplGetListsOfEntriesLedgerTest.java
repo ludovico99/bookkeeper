@@ -192,7 +192,6 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
                     " been thrown.", true);
         else {
             try {
-                while(this.bookieClientImpl.getNumPendingRequests(this.bookieId,this.ledgerId) != 0) wait(100);
 
                 AvailabilityOfEntriesOfLedger entriesOfLedger = this.bookieClientImpl.getListOfEntriesOfLedger(this.bookieId, this.ledgerId).join();
                 Assert.assertEquals(this.expectedGetListsOfEntriesLedger ,entriesOfLedger.getTotalNumOfAvailableEntries());

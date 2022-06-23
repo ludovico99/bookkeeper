@@ -54,15 +54,13 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
     private int flags;
     private Object ctx;
     private Object expectedAdd;
-    private Long ledgerId;
+    private long ledgerId;
     private ByteBufList toSend;
     private byte[] ms;
-    private ParamType ledgerIdParamType;
     private ParamType bookieIdParamType;
-    private ParamType entryIdIdParamType;
     private ClientConfType clientConfTypeEnum;
     private BookieId bookieId;
-    private Long entryId;
+    private long entryId;
 
 
     public BookieClientImplAddEntryTest(ParamType bookieId, long ledgerId, byte[] ms, long entryId, ByteBufList toSend, ParamType cb, Object ctx, int flags, ClientConfType clientConfType, Object expectedAdd) {

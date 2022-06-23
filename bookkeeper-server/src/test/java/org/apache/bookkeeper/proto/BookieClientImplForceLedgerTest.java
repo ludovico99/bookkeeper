@@ -206,6 +206,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                     " been thrown.", true);
         else {
             try {
+
                 ((Counter)this.ctx).inc();
 
                 this.bookieClientImpl.forceLedger(this.bookieId, this.ledgerId, this.forceLedgerCallback, this.ctx);

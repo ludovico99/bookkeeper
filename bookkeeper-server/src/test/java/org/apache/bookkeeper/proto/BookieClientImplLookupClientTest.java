@@ -21,9 +21,8 @@ import org.junit.runners.Parameterized;
 import java.util.*;
 import java.util.concurrent.Executors;
 
-@Ignore
 @RunWith(value = Parameterized.class)
-public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase {
+public class BookieClientImplLookupClientTest  {
 
     private  Boolean exceptionInConfigPhase = false;
 
@@ -35,7 +34,6 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
 
 
     public BookieClientImplLookupClientTest(ParamType BookieId, ClientConfType bookieClient) {
-        super(1);
         configureLookupClient(BookieId, bookieClient);
 
 
@@ -138,16 +136,16 @@ public class BookieClientImplLookupClientTest extends BookKeeperClusterTestCase 
         return Arrays.asList(new Object[][]{
                 //BookieId,                  Class Config,
                 {ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF},
-                {ParamType.VALID_INSTANCE,   ClientConfType.INVALID_CONFIG},
-                {ParamType.VALID_INSTANCE,   ClientConfType.CLOSED_CONFIG},
+//                {ParamType.VALID_INSTANCE,   ClientConfType.INVALID_CONFIG},
+//                {ParamType.VALID_INSTANCE,   ClientConfType.CLOSED_CONFIG},
 
                 {ParamType.INVALID_INSTANCE, ClientConfType.STD_CONF},
-                {ParamType.INVALID_INSTANCE, ClientConfType.INVALID_CONFIG},
-                {ParamType.INVALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
+//                {ParamType.INVALID_INSTANCE, ClientConfType.INVALID_CONFIG},
+//                {ParamType.INVALID_INSTANCE, ClientConfType.CLOSED_CONFIG},
 
                 {ParamType.NULL_INSTANCE,    ClientConfType.STD_CONF},
-                {ParamType.NULL_INSTANCE,    ClientConfType.INVALID_CONFIG},
-                {ParamType.NULL_INSTANCE,    ClientConfType.CLOSED_CONFIG}
+//                {ParamType.NULL_INSTANCE,    ClientConfType.INVALID_CONFIG},
+//                {ParamType.NULL_INSTANCE,    ClientConfType.CLOSED_CONFIG}
 
         });
     }
