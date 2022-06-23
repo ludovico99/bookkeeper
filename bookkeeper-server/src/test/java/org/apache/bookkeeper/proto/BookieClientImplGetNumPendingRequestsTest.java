@@ -161,14 +161,14 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
         return Arrays.asList(new Object[][]{
                 // Bookie Id,            ledger Id,   Client conf type,            Expected Value
-//                {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     20L },
-//                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     0L},
-//                {ParamType.INVALID_INSTANCE,  0L,    ClientConfType.STD_CONF,     true },
-//                {ParamType.INVALID_INSTANCE, -5L,    ClientConfType.STD_CONF,     true },
-//                {ParamType.NULL_INSTANCE,     0L,    ClientConfType.STD_CONF,     true },
-//                {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
-//                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
-//                {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
+                {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     20L },
+                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     0L},
+                {ParamType.INVALID_INSTANCE,  0L,    ClientConfType.STD_CONF,     true },
+                {ParamType.INVALID_INSTANCE, -5L,    ClientConfType.STD_CONF,     true },
+                {ParamType.NULL_INSTANCE,     0L,    ClientConfType.STD_CONF,     true },
+                {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
+                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
+                {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
                 {ParamType.VALID_INSTANCE,     0L,   ClientConfType.WRITABLE_PCBC,  PENDINGREQ_NOTWRITABLE_MASK},
 
 
