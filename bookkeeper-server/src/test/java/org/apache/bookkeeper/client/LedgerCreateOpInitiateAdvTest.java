@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
-
+@Ignore
 @RunWith(value = Parameterized.class)
 public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 

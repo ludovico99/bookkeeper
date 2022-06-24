@@ -22,6 +22,7 @@ import java.util.EnumSet;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
+@Ignore
 @RunWith(value = Parameterized.class)
 public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 

@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-@Ignore
+
 @RunWith(value = Parameterized.class)
 public class BookieClientImplCreateTest{
 
