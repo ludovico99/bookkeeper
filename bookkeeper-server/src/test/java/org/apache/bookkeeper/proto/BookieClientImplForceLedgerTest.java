@@ -190,6 +190,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                 { ParamType.NULL_INSTANCE,       0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        true},
                 { ParamType.VALID_INSTANCE,     -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
                 { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
+                { ParamType.INVALID_INSTANCE,   -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
                 { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},

@@ -146,7 +146,7 @@ public class BookieClientImplCreateTest{
             Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
-            if(this.pcbcPoolParamType.compareTo(ParamType.INVALID_INSTANCE)==0) {
+            if(this.pcbcPoolParamType == ParamType.INVALID_INSTANCE) {
                 try {
                     this.pcbcPool = new DefaultPerChannelBookieClientPool(clientConfiguration, bookieClientImpl, this.bookieId, 0);
                     Assert.fail("Test case has failed");

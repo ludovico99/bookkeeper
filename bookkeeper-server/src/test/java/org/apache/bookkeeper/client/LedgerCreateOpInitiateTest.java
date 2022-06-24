@@ -22,7 +22,6 @@ import java.util.EnumSet;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 
-@Ignore
 @RunWith(value = Parameterized.class)
 public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
@@ -79,12 +78,12 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
                     {3, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
 
                     {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
-                    {5, 6, 7, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {5, 6, 7,   ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
 
-                    {3, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,BKException.Code.OK},
-                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
-                    {5, 6, 7, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},//Null pointer exception
-                    {1, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true} //???? ensemble è null????
+//                    {3, 2, 2,   ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,BKException.Code.OK},
+//                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
+//                    {5, 6, 7,   ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},//Null pointer exception
+//                    {1, 2, 2,   ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true} //???? ensemble è null????
 
             });
         }
