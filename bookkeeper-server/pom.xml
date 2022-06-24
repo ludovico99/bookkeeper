@@ -432,8 +432,8 @@
             <version>${pitest.version}</version>
             <configuration>
               <targetClasses>
-                <param>org.apache.bookkeeper.client.LedgerCreateOp*</param>
-				<param>org.apache.bookkeeper.proto.BookieClientImpl*</param>
+                <param>org.apache.bookkeeper.client.LedgerCreateOp</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImpl</param>
               </targetClasses>
               <targetTests>
 				<param>org.apache.bookkeeper.client.LedgerCreateOpInitiateTest</param>
