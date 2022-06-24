@@ -150,7 +150,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

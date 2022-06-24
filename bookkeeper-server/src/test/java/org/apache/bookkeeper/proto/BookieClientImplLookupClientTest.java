@@ -127,7 +127,7 @@ public class BookieClientImplLookupClientTest  {
         }catch (Exception e){
 
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

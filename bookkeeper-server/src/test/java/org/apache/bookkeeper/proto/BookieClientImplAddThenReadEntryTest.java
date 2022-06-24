@@ -151,7 +151,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

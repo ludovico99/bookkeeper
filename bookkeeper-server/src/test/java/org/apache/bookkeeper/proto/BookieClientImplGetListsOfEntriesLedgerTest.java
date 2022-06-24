@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClusterTestCase {
 
@@ -86,7 +85,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
 
@@ -153,7 +152,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
