@@ -35,13 +35,13 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     private ClientConfType clientConfType;
     private boolean exceptionInConfigPhase = false;
 
-    public LedgerCreateOpInitiateAdvTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
+    public LedgerCreateOpInitiateAdvTest(int ensembleSize, int writeQuorumSize, int ackQuorumSize, long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
         super(3);
         configureInitiateAdv(ensembleSize, writeQuorumSize, ackQuorumSize, ledgerId, cb,clientConfType, expectedValue);
     }
 
 
-    private void configureInitiateAdv(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, Long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedException) {
+    private void configureInitiateAdv(int ensembleSize, int writeQuorumSize, int ackQuorumSize, long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedException) {
         this.clientConfType = clientConfType;
         this.expectedValue = expectedException;
         this.ensembleSize = ensembleSize;
@@ -65,10 +65,6 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
         return Arrays.asList(new Object[][]{
                 //Totale bookies = 3
                 //ensembleSize,       writeQuorumSize,     ackQuorumSize,    ledgerId,             CB,                         Client conf,      Exception
-                {null,                  1,                  1,              0L,                 ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
-                {3,                     null,               1,              0L,                 ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
-                {3,                     2,                  null,           0L,                 ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
-                {3,                     2,                  1,              null,               ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, true}, //new NullPointerException
 
                 {1,                     2,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
                 {1,                     2,                  3,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException

@@ -28,20 +28,20 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
     private ClientConfType clientConfType;
     private Object expectedValue;
-    private Integer ensembleSize;
-    private Integer writeQuorumSize;
-    private Integer ackQuorumSize;
+    private int ensembleSize;
+    private int writeQuorumSize;
+    private int ackQuorumSize;
     private AsyncCallback.CreateCallback cb;
     private  Boolean exceptionInConfigPhase = false;
 
 
 
-        public LedgerCreateOpInitiateTest(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
+        public LedgerCreateOpInitiateTest(int ensembleSize, int writeQuorumSize, int ackQuorumSize, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
             super(3);
             configureInitiate(ensembleSize, writeQuorumSize, ackQuorumSize, cb, clientConfType, expectedValue);
         }
 
-        private void configureInitiate(Integer ensembleSize, Integer writeQuorumSize, Integer ackQuorumSize, ParamType cb, ClientConfType clientConfType, Object expectedException) {
+        private void configureInitiate(int ensembleSize, int writeQuorumSize, int ackQuorumSize, ParamType cb, ClientConfType clientConfType, Object expectedException) {
 
             this.expectedValue = expectedException;
             this.ensembleSize = ensembleSize;
@@ -64,21 +64,19 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
         @Parameterized.Parameters
         public static Collection<Object[]> getParameters() {
             return Arrays.asList(new Object[][]{
+
                     //Totale bookies = 3
-                    //ensembleSize,writeQuorumSize,ackQuorumSize, CB, bk conf,      Exception
-                    {null, 1, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true},
-                    {3, null, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true},
-                    {3, 1, null, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true},
+                    //ensembleSize,writeQuorumSize,ackQuorumSize, CB,     Expected Value
+                    {0, 0, 0, ParamType.VALID_INSTANCE,  BKException.Code.OK},
+                    {2, 2, 2, ParamType.VALID_INSTANCE,  BKException.Code.OK},
+                    {3, 2, 2, ParamType.VALID_INSTANCE,  BKException.Code.OK},
 
-                    {1, 1, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.OK},
-                    {3, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,BKException.Code.OK},
+                    {1, 2, 2, ParamType.VALID_INSTANCE,  BKException.Code.ZKException},
+                    {3, 4, 5, ParamType.VALID_INSTANCE,  BKException.Code.ZKException},
+                    {3, 2, 3, ParamType.VALID_INSTANCE,  BKException.Code.ZKException},
 
-                    {1, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
-                    {3, 4, 5, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
-                    {3, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
-
-                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
-                    {5, 6, 7,   ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {4, 3, 2, ParamType.VALID_INSTANCE,   BKException.Code.NotEnoughBookiesException},
+                    {4, 5, 6,   ParamType.VALID_INSTANCE, BKException.Code.NotEnoughBookiesException},
 
 //                    {3, 2, 2,   ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,BKException.Code.OK},
 //                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
