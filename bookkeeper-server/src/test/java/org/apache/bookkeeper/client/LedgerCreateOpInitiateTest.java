@@ -73,21 +73,20 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
                     {1, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
                     {1, 2, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
-                    {1, 0, -1,ParamType.VALID_INSTANCE,ClientConfType.STD_CONF,   BKException.Code.ZKException},
+                    {1, 0, -1,ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,   BKException.Code.ZKException},
                     {1, 0, 0, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.OK},
 
-                    {4, 5,  6, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.NotEnoughBookiesException},
+                    {4, 5,  6, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
                     {4, 5,  5, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
                     {4, 3,  4, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
-
                     {4, 3,  3, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
 
                     {4, 3, 3, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
                     {4, 4, 3, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
-                    {1, 0, 0, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,   BKException.Code.OK},
+                    {1, 0, 0, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
                     {4, 5, 6, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()},
-                    {1, 2, 1, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,   new NullPointerException()},
-                    {-1, 0, 0,ParamType.VALID_INSTANCE,ClientConfType.NO_STD_CONF,    new NullPointerException()}
+                    {1, 2, 1, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()},
+                    {-1, 0, 0,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}
 
             });
         }

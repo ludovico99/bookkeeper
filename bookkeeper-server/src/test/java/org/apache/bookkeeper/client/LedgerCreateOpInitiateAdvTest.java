@@ -1,6 +1,7 @@
 package org.apache.bookkeeper.client;
 
 import org.apache.bookkeeper.client.api.WriteFlag;
+import org.apache.bookkeeper.proto.BookieClientImpl;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.Counter;
@@ -22,7 +23,6 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
-@Ignore
 @RunWith(value = Parameterized.class)
 public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
@@ -64,25 +64,29 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(new Object[][]{
                 //Totale bookies = 3
-                //ensembleSize,       writeQuorumSize,     ackQuorumSize,    ledgerId,             CB,                         Client conf,      Exception
+                //ensembleSize,writeQuorumSize,ackQuorumSize,ledgerId,CB,Client conf,Exception
 
-                {1,                     2,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
-                {1,                     2,                  3,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
-                {3,                     2,                  3,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
-                {3,                     2,                  1,             -2L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, true}, //new IllegalArgumentException
+                {-1, 0, 1,  0L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF, new IllegalArgumentException()},
+                {-1, 0, 0, -1L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF, new IllegalArgumentException()},
+                {-1, -2, -1,0L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF, new IllegalArgumentException()},
+                {-1, -2, -2,0L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF, new IllegalArgumentException()},
 
-                {3,                     2,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.OK},
-                {3,                     2,                  2,             -1L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,BKException.Code.OK},
+                {1, 2, 3,  -1L,   ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,  BKException.Code.ZKException},
+                {1, 2, 1,  0L,   ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,   new IllegalArgumentException()},
+                {1, 0, -1, -1L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,    BKException.Code.ZKException},
+                {1, 0, 0,  0L,   ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,   BKException.Code.OK},
 
-                {10,                    5,                  2,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
-                {5,                     6,                  7,              0L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
-                {5,                     6,                  7,             -2L,                 ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {4, 5,  6,0L, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {4, 5,  5,0L, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {4, 3,  4,0L, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {4, 3,  3,-1L,ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
 
-                {3,                     2,                  2,               0L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.OK},
-                {11,                    10,                 2,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
-                {5,                     6,                  7,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true},
-                {7,                     6,                  7,               0L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
-                {1,                     2,                  2,              -2L,                ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, true}
+                {4, 3, 3,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
+                {4, 4, 3,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
+                {1, 0, 0,-1L,ParamType.VALID_INSTANCE,  ClientConfType.NO_STD_CONF, BKException.Code.OK},
+                {4, 5, 6,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()},
+                {1, 2, 1,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()},
+                {-1, 0, 0,0L,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}
 
         });
     }
@@ -127,18 +131,22 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
                 ledgerCreateOp.initiateAdv(this.ledgerId);
 
-                if (((int) this.expectedValue != BKException.Code.ZKException)) {
-                    counter.wait(0);
-                    ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
-                    verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
-                    Assert.assertEquals(this.expectedValue, argument.getValue());
-                } else verifyNoInteractions(this.cb);
+                if(this.expectedValue instanceof Integer) {
+                    if(((int) this.expectedValue != BKException.Code.ZKException)) {
+                        counter.wait(0);
+                        ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
+                        verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
+                        Assert.assertEquals(this.expectedValue, argument.getValue());
+                    }
+                    else verifyNoInteractions(this.cb);
+                }
+                else Assert.assertFalse("No exception expected", (Boolean) this.expectedValue);
             }
             catch (ClassCastException castException){
                 Assert.fail("Cast exception raised means that the expected value is wrong");
             } catch (Exception e) {
                 e.printStackTrace();
-                Assert.assertTrue("Exception that i expect is raised", (boolean) this.expectedValue);
+                Assert.assertEquals("Exception that i expect is raised", this.expectedValue.getClass(), e.getClass());
 
             }
 
