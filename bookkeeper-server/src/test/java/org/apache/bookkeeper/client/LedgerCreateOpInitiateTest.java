@@ -139,7 +139,7 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
                         }
                          else verifyNoInteractions(this.cb);
                     }
-                    Assert.fail("Test case has failed");
+                   else Assert.fail("Test case has failed");
 
                 }
                 catch (Exception e) {

@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
+
 @RunWith(value = Parameterized.class)
 public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
@@ -140,7 +141,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                     }
                     else verifyNoInteractions(this.cb);
                 }
-                Assert.fail("Test case has failed");
+                else Assert.fail("Test case has failed"); Assert.fail("Test case has failed");
             }
             catch (Exception e) {
                 e.printStackTrace();
