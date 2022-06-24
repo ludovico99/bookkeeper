@@ -66,15 +66,21 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
             return Arrays.asList(new Object[][]{
                     //Totale bookies = 3
                     //ensembleSize,writeQuorumSize,ackQuorumSize, CB, bk conf,      Expected Value
-                    {0, 0, 0, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.OK},
-                    {3, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.OK},
+                    {-1, 0, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,   new IllegalArgumentException()},
+                    {-1, 0, 0, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,   new IllegalArgumentException()},
+                    {-1, -2, -1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, new IllegalArgumentException()},
+                    {-1, -2, -2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, new IllegalArgumentException()},
 
-                    {1, 2, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
-                    {3, 4, 5, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
-                    {3, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
+                    {1, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
+                    {1, 2, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
+                    {1, 0, -1, ParamType.VALID_INSTANCE,ClientConfType.STD_CONF, BKException.Code.ZKException},
+                    {1, 0, 0, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.OK},
 
-                    {4, 3, 2, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
-                    {4, 5, 6,   ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {4, 5,  6,  ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {4, 5,  5, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {4, 3,  4, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+                    {4, 3,  3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
+
 
 //                    {3, 2, 2,   ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF,BKException.Code.OK},
 //                    {11, 10, 2, ParamType.VALID_INSTANCE, ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
