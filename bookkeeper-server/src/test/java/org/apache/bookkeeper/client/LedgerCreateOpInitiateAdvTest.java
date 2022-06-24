@@ -140,11 +140,9 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                     }
                     else verifyNoInteractions(this.cb);
                 }
-                else Assert.assertFalse("No exception expected", (Boolean) this.expectedValue);
+                Assert.fail("Test case has failed");
             }
-            catch (ClassCastException castException){
-                Assert.fail("Cast exception raised means that the expected value is wrong");
-            } catch (Exception e) {
+            catch (Exception e) {
                 e.printStackTrace();
                 Assert.assertEquals("Exception that i expect is raised", this.expectedValue.getClass(), e.getClass());
 
