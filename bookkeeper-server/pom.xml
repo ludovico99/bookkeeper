@@ -443,7 +443,7 @@
 				<param>org.apache.bookkeeper.proto.BookieClientImplCreateTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplForceLedger</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplGetFaultyBookiesTest</param>
-				<param>org.apache.bookkeeper.proto.BookieClientImplGetlistsOfEntriesLedger</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplGetListsOfEntriesLedgerTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplGetNumPendingRequestsTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplIsWritableTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplLookupClientTest</param>

@@ -145,7 +145,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
             if(this.clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
-            Utils.sleep(1000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
+            Utils.sleep(2000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();
