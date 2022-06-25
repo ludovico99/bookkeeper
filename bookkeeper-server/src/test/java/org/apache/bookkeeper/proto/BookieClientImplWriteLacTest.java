@@ -15,10 +15,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
-import org.apache.bookkeeper.util.ByteBufList;
-import org.apache.bookkeeper.util.ClientConfType;
-import org.apache.bookkeeper.util.Counter;
-import org.apache.bookkeeper.util.ParamType;
+import org.apache.bookkeeper.util.*;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -170,6 +167,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
                     break;
             }
 
+            Utils.sleep(1000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();

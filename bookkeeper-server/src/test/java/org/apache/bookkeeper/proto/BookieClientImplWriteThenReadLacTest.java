@@ -174,6 +174,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                     break;
             }
 
+            Utils.sleep(1000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();

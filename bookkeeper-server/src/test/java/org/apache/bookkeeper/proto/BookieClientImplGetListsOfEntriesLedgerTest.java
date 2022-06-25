@@ -146,9 +146,9 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
                     this.bookieClientImpl.channels.put(bookieId, pool2);
                     this.orderedExecutor.shutdown();
                     break;
-
-
             }
+
+            Utils.sleep(1000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();

@@ -15,10 +15,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
-import org.apache.bookkeeper.util.ByteBufList;
-import org.apache.bookkeeper.util.ClientConfType;
-import org.apache.bookkeeper.util.Counter;
-import org.apache.bookkeeper.util.ParamType;
+import org.apache.bookkeeper.util.*;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -108,7 +105,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             }
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
 
@@ -148,6 +145,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
             if(this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId = bookieId;
             if(this.clientConfTypeEnum.equals(ClientConfType.CLOSED_CONFIG)) this.bookieClientImpl.close();
 
+            Utils.sleep(1000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();
