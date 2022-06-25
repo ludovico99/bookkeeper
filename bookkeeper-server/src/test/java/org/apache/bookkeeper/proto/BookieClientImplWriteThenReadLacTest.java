@@ -137,6 +137,8 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 counter.wait(0);
             }
 
+            Utils.sleep(2000);
+
             counter = new Counter();
 
             while(this.writeLacRC != BKException.Code.OK) {
@@ -174,7 +176,7 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                     break;
             }
 
-            Utils.sleep(5000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
+            Utils.sleep(2000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();
