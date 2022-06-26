@@ -121,30 +121,13 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
             //Sincrona
-            long entryId = handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
+           handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                             "masterKey".getBytes(StandardCharsets.UTF_8));
 
-            Counter counter = new Counter();
 
-
-            while(this.lastRc != 0) {
-                counter.i =1 ;
-
-                System.out.println("Retry");
-
-                ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
-                ByteBufList byteBufList = ByteBufList.get(byteBuf);
-
-                this.bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                        entryId, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
-
-                counter.wait(0);
-
-                System.out.println("Add entry completed");
-            }
 
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
