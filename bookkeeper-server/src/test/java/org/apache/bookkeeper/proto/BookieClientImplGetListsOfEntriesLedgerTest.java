@@ -28,7 +28,6 @@ import java.util.concurrent.Executors;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClusterTestCase {
 
-    private  Boolean exceptionInConfigPhase = false;
     private  BookieClientImpl bookieClientImpl;
 
 
@@ -38,7 +37,6 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
     private Object expectedGetListsOfEntriesLedger;
     private Long ledgerId;
     private ParamType bookieIdParamType;
-    private OrderedExecutor orderedExecutor;
     private ClientConfType clientConfType;
     private BookieId bookieId;
     private int lastRC = -1;

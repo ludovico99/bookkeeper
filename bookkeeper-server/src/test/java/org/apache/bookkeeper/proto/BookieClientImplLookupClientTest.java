@@ -31,8 +31,6 @@ public class BookieClientImplLookupClientTest  {
     private BookieClientImpl bookieClient;
     private BookieId bookieId;
     private Object expectedLookupClient;
-    private ParamType bookieIdParamType;
-
 
 
     public BookieClientImplLookupClientTest(ParamType BookieId, ClientConfType bookieClient) {
@@ -42,7 +40,6 @@ public class BookieClientImplLookupClientTest  {
     }
 
     private void configureLookupClient(ParamType bookieId, ClientConfType bookieClient) {
-        this.bookieIdParamType = bookieId;
 
         try {
             ClientConfiguration confLookupValid=TestBKConfiguration.newClientConfiguration();

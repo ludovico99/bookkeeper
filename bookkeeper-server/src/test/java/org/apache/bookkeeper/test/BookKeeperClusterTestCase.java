@@ -106,6 +106,7 @@ public abstract class BookKeeperClusterTestCase {
     protected int numBookies;
     protected BookKeeperTestClient bkc;
     protected boolean useUUIDasBookieId = true;
+    protected boolean exceptionInConfigPhase = false;
 
     /*
      * Loopback interface is set as the listening interface and allowloopback is
@@ -184,7 +185,9 @@ public abstract class BookKeeperClusterTestCase {
                 runtime.getMethodName(), metadataServiceUri,  sw.elapsed(TimeUnit.MILLISECONDS));
         } catch (Exception e) {
             LOG.error("Error setting up", e);
+            this.exceptionInConfigPhase = true;
             throw e;
+
         }
     }
 

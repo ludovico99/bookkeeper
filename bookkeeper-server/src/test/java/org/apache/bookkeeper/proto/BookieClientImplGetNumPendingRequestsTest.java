@@ -38,7 +38,6 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperClusterTestCase {
 
-    private  Boolean exceptionInConfigPhase = false;
     private  BookieClientImpl bookieClientImpl;
     private ClientConfiguration clientConf;
 

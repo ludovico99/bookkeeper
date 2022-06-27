@@ -32,7 +32,6 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
-    private Boolean exceptionInConfigPhase = false;
     private BookieClientImpl bookieClientImpl;
 
 
@@ -45,7 +44,6 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     private ParamType bookieIdParamType;
     private  ClientConfType clientConfType;
     private BookieId bookieId;
-    //private int lastRc = -1;
 
 
     public BookieClientImplForceLedgerTest(ParamType bookieId, long ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {

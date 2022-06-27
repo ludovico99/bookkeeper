@@ -33,7 +33,6 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
-    private  Boolean exceptionInConfigPhase = false;
     private  BookieClientImpl bookieClientImpl;
 
 //    void writeLac(final BookieId addr, final long ledgerId, final byte[] masterKey,
@@ -132,14 +131,10 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
                     setMasterKey(handle.getId(),
                             "masterKey".getBytes(StandardCharsets.UTF_8));
 
-
-
             Counter counter = new Counter();
 
             while(this.lastRc != 0) {
                 counter.i = 1;
-
-                System.out.println("Retry");
 
                 ByteBuf toSend = Unpooled.buffer(1024);
                 toSend.resetReaderIndex();
@@ -155,10 +150,9 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
                 counter.wait(0);
 
-                System.out.println("Add entry completed");
             }
 
-            if(bookieIdParamType.equals(ParamType.VALID_INSTANCE))      this.bookieId = bookieId;
+            if(bookieIdParamType == ParamType.VALID_INSTANCE)      this.bookieId = bookieId;
             if(this.msParamType == ParamType.VALID_INSTANCE)  this.ms = bookieServer.getBookie().getLedgerStorage().readMasterKey(handle.getId());
 
             switch (this.clientConfType){
@@ -202,11 +196,11 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                   Ledger_id,   Master key   LAC    toSend,            WriteLacCallBack,         Object           ClientConf                        Raise exception
+                //Bookie_ID                   Ledger_id,   Master key             LAC    toSend,            WriteLacCallBack,         Object           ClientConf                        Raise exception
                 {  ParamType.VALID_INSTANCE,     0L,   ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
                 {  ParamType.INVALID_INSTANCE,   0L,   ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,     -5L,  ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
-                {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
+                {  ParamType.VALID_INSTANCE,     -5L,  ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.NoSuchLedgerExistsException},
+                {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.NoSuchEntryException},
                 {  ParamType.NULL_INSTANCE,       0L,  ParamType.VALID_INSTANCE,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   0L,   null,              ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   0L,   emptyByteBufList,  ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.WriteException},

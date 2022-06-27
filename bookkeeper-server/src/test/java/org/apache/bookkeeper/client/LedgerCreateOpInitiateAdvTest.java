@@ -34,7 +34,6 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
     private Long ledgerId;
     private AsyncCallback.CreateCallback cb;
     private ClientConfType clientConfType;
-    private boolean exceptionInConfigPhase = false;
 
     public LedgerCreateOpInitiateAdvTest(int ensembleSize, int writeQuorumSize, int ackQuorumSize, long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
         super(3);
@@ -108,7 +107,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true; //Ci sono tanti errori nella connessione con Zookkeeper
+            this.exceptionInConfigPhase = true; //Ci sono tanti errori nella connessione con Zookkeeper
         }
 
 

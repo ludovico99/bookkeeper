@@ -32,7 +32,6 @@ import static org.mockito.Mockito.*;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestCase {
 
-    private  Boolean exceptionInConfigPhase = false;
     private  BookieClientImpl bookieClientImpl;
 
 
@@ -161,7 +160,7 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }

@@ -26,7 +26,6 @@ import java.util.concurrent.Executors;
 @RunWith(value = Parameterized.class)
 public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestCase {
 
-    private  Boolean exceptionInConfigPhase = false;
     private  BookieClientImpl bookieClientImpl;
     private  ClientConfiguration confFaultyBookies;
 
@@ -57,7 +56,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
             }
         }catch(Exception e){
             e.printStackTrace();
-           // this.exceptionInConfigPhase = true;
+           this.exceptionInConfigPhase = true;
         }
 
     }
@@ -75,7 +74,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
