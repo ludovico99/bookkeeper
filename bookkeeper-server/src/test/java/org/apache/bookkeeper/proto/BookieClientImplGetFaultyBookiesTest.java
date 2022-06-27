@@ -43,21 +43,22 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
 
     @Before
-    public void set_up() throws Exception {
+    public void set_up() {
+        try {
+            this.bookieClientImpl = (BookieClientImpl) this.bkc.getBookieClient();
 
-        ServerConfiguration serverConfiguration = newServerConfiguration();
-        serverConfiguration.setMetadataServiceUri(zkUtil.getMetadataServiceUri("/ledgers"));
-        startAndAddBookie(serverConfiguration);
-
-        if (nFaultyBookies > 0) {
-            for (int i = 1; i<= nFaultyBookies;i++) {
-                serverConfiguration = newServerConfiguration();
-                serverConfiguration.setMetadataServiceUri(zkUtil.getMetadataServiceUri("/ledgers"));
-                ServerTester server = startAndAddBookie(serverConfiguration);
-                this.expectedFaultyBookies.add(server.getServer().getBookieId());
+            if (nFaultyBookies > 0) {
+                for (int i = 1; i <= nFaultyBookies; i++) {
+                    ServerConfiguration serverConfiguration = newServerConfiguration();
+                    serverConfiguration.setMetadataServiceUri(zkUtil.getMetadataServiceUri("/ledgers"));
+                    ServerTester server = startAndAddBookie(serverConfiguration);
+                    this.expectedFaultyBookies.add(server.getServer().getBookieId());
+                }
             }
+        }catch(Exception e){
+            e.printStackTrace();
+           // this.exceptionInConfigPhase = true;
         }
-
 
     }
 
@@ -72,10 +73,9 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
             this.confFaultyBookies = TestBKConfiguration.newClientConfiguration();
             this.setClientConfiguration(confFaultyBookies);
 
-            this.bookieClientImpl = (BookieClientImpl) this.bkc.getBookieClient();
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -102,16 +102,16 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
             long threshold = confFaultyBookies.getBookieErrorThresholdPerInterval();
 
-            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bookieClientImpl,
+            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.confFaultyBookies, bookieClientImpl,
                     serverByIndex(0).getBookieId(), 1);
 
             pool.errorCounter.getAndSet((int) --threshold);
 
-            bookieClientImpl.channels.put(serverByIndex(0).getBookieId(), pool);
+            this.bookieClientImpl.channels.put(serverByIndex(0).getBookieId(), pool);
 
             for (int i = 1; i <= nFaultyBookies; i++) {
 
-                pool = new DefaultPerChannelBookieClientPool(confFaultyBookies, bookieClientImpl,
+                pool = new DefaultPerChannelBookieClientPool(this.confFaultyBookies, this.bookieClientImpl,
                         serverByIndex(i).getBookieId(), 1);
 
                 pool.errorCounter.getAndSet((int) ++threshold);
@@ -123,7 +123,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
             this.expectedFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 
-            List<BookieId> actualFaultyBookies = bookieClientImpl.getFaultyBookies();
+            List<BookieId> actualFaultyBookies = this.bookieClientImpl.getFaultyBookies();
 
             actualFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 
