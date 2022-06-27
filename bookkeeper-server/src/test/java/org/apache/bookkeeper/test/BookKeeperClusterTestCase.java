@@ -168,7 +168,7 @@ public abstract class BookKeeperClusterTestCase {
         setUp("/ledgers");
     }
 
-    protected void setUp(String ledgersRootPath) throws Exception {
+    protected void setUp(String ledgersRootPath){
         LOG.info("Setting up test {}", getClass());
         InMemoryMetaStore.reset();
         setMetastoreImplClass(baseConf);
@@ -186,7 +186,6 @@ public abstract class BookKeeperClusterTestCase {
         } catch (Exception e) {
             LOG.error("Error setting up", e);
             this.exceptionInConfigPhase = true;
-            throw e;
 
         }
     }

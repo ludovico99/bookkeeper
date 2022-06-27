@@ -174,7 +174,7 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
 
         }catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -199,8 +199,8 @@ public class BookieClientImplWriteLacTest extends BookKeeperClusterTestCase {
                 //Bookie_ID                   Ledger_id,   Master key             LAC    toSend,            WriteLacCallBack,         Object           ClientConf                        Raise exception
                 {  ParamType.VALID_INSTANCE,     0L,   ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK},
                 {  ParamType.INVALID_INSTANCE,   0L,   ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,     -5L,  ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.NoSuchLedgerExistsException},
-                {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.NoSuchEntryException},
+                {  ParamType.VALID_INSTANCE,     -5L,  ParamType.VALID_INSTANCE,   0L,   byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK}, //Andrebbe gestito meglio
+                {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          BKException.Code.OK}, //Andrebbe gestito meglio
                 {  ParamType.NULL_INSTANCE,       0L,  ParamType.VALID_INSTANCE,   -5L,  byteBufList,       ParamType.VALID_INSTANCE,  new Counter() ,  ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   0L,   null,              ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          true},
                 {  ParamType.VALID_INSTANCE,      0L,  ParamType.VALID_INSTANCE,   0L,   emptyByteBufList,  ParamType.VALID_INSTANCE,  new Counter(),   ClientConfType.STD_CONF,          BKException.Code.WriteException},

@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(value = Parameterized.class)
 public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestCase {
-    
+
     private BookieClientImpl bookieClientImpl;
 
 
