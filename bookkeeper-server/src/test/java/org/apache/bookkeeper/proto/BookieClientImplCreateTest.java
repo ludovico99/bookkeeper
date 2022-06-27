@@ -65,7 +65,6 @@ public class BookieClientImplCreateTest{
                     new DefaultThreadFactory("BookKeeperClientScheduler"));
             StatsLogger logger = NullStatsLogger.INSTANCE;
             BookieAddressResolver bookieAddressResolver = BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER;
-            ExtensionRegistry registry = ExtensionRegistry.newInstance();
 
             this.clientConfiguration.setLimitStatsLogging(true);
 

@@ -36,7 +36,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
 
     public BookieClientImplGetFaultyBookiesTest(int nFaultyBookie) {
-        super(0);
+        super(1);
         configureGetFaultyBookies(nFaultyBookie);
 
     }
@@ -70,11 +70,9 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
             this.nFaultyBookies = nFaultyBookies;
             this.expectedFaultyBookies = Lists.newArrayList();
             this.confFaultyBookies = TestBKConfiguration.newClientConfiguration();
+            this.setClientConfiguration(confFaultyBookies);
 
-            this.bookieClientImpl = new BookieClientImpl(this.confFaultyBookies, new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+            this.bookieClientImpl = (BookieClientImpl) this.bkc.getBookieClient();
         }catch (Exception e){
             e.printStackTrace();
             this.exceptionInConfigPhase = true;

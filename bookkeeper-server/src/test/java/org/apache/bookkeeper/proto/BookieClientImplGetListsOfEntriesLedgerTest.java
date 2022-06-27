@@ -62,12 +62,8 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
         try {
 
-            this.orderedExecutor = OrderedExecutor.newBuilder().build();
 
-            this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT,this.orderedExecutor, Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+            this.setClientConfiguration(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1));
 
             switch (bookieId) {
                 case VALID_INSTANCE:
@@ -101,9 +97,9 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
+            this.bookieClientImpl = (BookieClientImpl) this.bkc.getBookieClient();
+
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
-            //Sincrona
-            long entryId = handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
@@ -114,11 +110,17 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
             while(this.lastRC != BKException.Code.OK) {
                 counter.i = 1;
 
-                ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
-                ByteBufList byteBufList = ByteBufList.get(byteBuf);
+                ByteBuf toSend = Unpooled.buffer(1024);
+                toSend.resetReaderIndex();
+                toSend.resetWriterIndex();
+                toSend.writeLong(0L);
+                toSend.writeLong(0L);
+                toSend.writeBytes("Entry content".getBytes(StandardCharsets.UTF_8));
+                toSend.writerIndex(toSend.capacity());
+                ByteBufList byteBufList = ByteBufList.get(toSend);
 
-                this.bookieClientImpl.addEntry(bookieId, handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
-                        entryId, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
+                this.bookieClientImpl.addEntry(bookieId, handle.getId(), bookieServer.getBookie().getLedgerStorage().readMasterKey(handle.getId()),
+                        0L, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
                 counter.wait(0);
             }
@@ -144,11 +146,10 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
 
                     pool2.clients[0].close();
                     this.bookieClientImpl.channels.put(bookieId, pool2);
-                    this.orderedExecutor.shutdown();
+                    this.bkc.getMainWorkerPool().shutdown();
                     break;
             }
 
-            Utils.sleep(5000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();

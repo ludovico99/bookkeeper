@@ -61,17 +61,12 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         this.clientConfType = clientConfType;
         this.expectedNumPendingRequests = expected;
         this.ledgerId = ledgerId;
-        this.numberPendingRequestToInsert = 20L;
+        this.numberPendingRequestToInsert = 10L;
 
         try {
 
             this.clientConf = TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1);
-
-            this.bookieClientImpl = new BookieClientImpl(this.clientConf, new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
-
+            this.setBaseClientConf(this.clientConf);
 
             switch (bookieId) {
                 case VALID_INSTANCE:
@@ -93,7 +88,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         }
         catch (Exception e){
             e.printStackTrace();
-            //this.exceptionInConfigPhase = true;
+            this.exceptionInConfigPhase = true;
         }
 
     }
@@ -104,6 +99,8 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
+            this.bookieClientImpl = (BookieClientImpl) this.bkc.getBookieClient();
+
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32, "pippo".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().setMasterKey(handle.getLedgerMetadata().getLedgerId(),
@@ -112,6 +109,7 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.clientConf, bookieClientImpl,
                     bookieId, 1);
+
 
             this.bookieClientImpl.channels.put(bookieId, pool);
 
@@ -129,22 +127,28 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
             for (long i = 0; i < this.numberPendingRequestToInsert; i++) {
 
-                handle.addEntry("hello".getBytes(StandardCharsets.UTF_8));
+                ByteBuf toSend = Unpooled.buffer(1024);
+                toSend.resetReaderIndex();
+                toSend.resetWriterIndex();
+                toSend.writeLong(0L);
+                toSend.writeLong(0L);
+                toSend.writeBytes("Entry content".getBytes(StandardCharsets.UTF_8));
+                toSend.writerIndex(toSend.capacity());
+                ByteBufList byteBufList = ByteBufList.get(toSend);
 
-                ByteBuf byteBuf = Unpooled.wrappedBuffer("This is the entry content".getBytes(StandardCharsets.UTF_8));
-                ByteBufList byteBufList = ByteBufList.get(byteBuf);
-
-                this.bookieClientImpl.addEntry(bookieId,handle.getId(), "masterKey".getBytes(StandardCharsets.UTF_8),
+                this.bookieClientImpl.addEntry(bookieId,handle.getId(), bookieServer.getBookie().getLedgerStorage().readMasterKey(handle.getId()),
                         i, byteBufList, writeCallback(), new Object() , BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
             }
+
+
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)){
                 this.bookieId = bookieId;
             }
 
             if (this.clientConfType.equals(ClientConfType.CLOSED_CONFIG)){
-                bookieClientImpl.close();
+                this.bookieClientImpl.close();
             }
 
 
@@ -161,15 +165,15 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
 
         return Arrays.asList(new Object[][]{
                 // Bookie Id,            ledger Id,   Client conf type,            Expected Value
-                {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     20L },
-                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     20L},
+                {ParamType.VALID_INSTANCE,    0L,    ClientConfType.STD_CONF,     10L },
+                {ParamType.VALID_INSTANCE,   -5L,    ClientConfType.STD_CONF,     10L},
                 {ParamType.INVALID_INSTANCE,  0L,    ClientConfType.STD_CONF,     true },
                 {ParamType.INVALID_INSTANCE, -5L,    ClientConfType.STD_CONF,     true },
                 {ParamType.NULL_INSTANCE,     0L,    ClientConfType.STD_CONF,     true },
                 {ParamType.NULL_INSTANCE,     -5L,   ClientConfType.STD_CONF,     true },
                 {ParamType.VALID_INSTANCE,     0L,   ClientConfType.CLOSED_CONFIG,  0L},
                 {ParamType.VALID_INSTANCE,    -5L,   ClientConfType.CLOSED_CONFIG,  0L},
-                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.NOT_WRITABLE_PCBC,  20L | PENDINGREQ_NOTWRITABLE_MASK}
+                {ParamType.VALID_INSTANCE,     0L,   ClientConfType.NOT_WRITABLE_PCBC,  10L | PENDINGREQ_NOTWRITABLE_MASK}
         }) ;
     }
 

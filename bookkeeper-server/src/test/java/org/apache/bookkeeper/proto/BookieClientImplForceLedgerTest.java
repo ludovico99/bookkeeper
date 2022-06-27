@@ -41,12 +41,11 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     private BookkeeperInternalCallbacks.ForceLedgerCallback forceLedgerCallback;
     private Object ctx;
     private Object expectedForceLedger;
-    private OrderedExecutor orderedExecutor;
     private Long ledgerId;
     private ParamType bookieIdParamType;
     private  ClientConfType clientConfType;
     private BookieId bookieId;
-    private int lastRc;
+    //private int lastRc = -1;
 
 
     public BookieClientImplForceLedgerTest(ParamType bookieId, long ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {
@@ -65,12 +64,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
         try {
 
-            this.orderedExecutor = OrderedExecutor.newBuilder().build();
-
-            this.bookieClientImpl = new BookieClientImpl(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1), new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT,this.orderedExecutor , Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+            this.setBaseClientConf(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1));
 
 
             switch (bookieId){
@@ -119,15 +113,13 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             BookieServer bookieServer = serverByIndex(0);
             BookieId bookieId = bookieServer.getBookieId();
 
+            this.bookieClientImpl = (BookieClientImpl) bkc.getBookieClient();
+
             LedgerHandle handle = bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
-            //Sincrona
-           handle.addEntry("Adding Entry ".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                             "masterKey".getBytes(StandardCharsets.UTF_8));
-
-
 
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
@@ -151,11 +143,9 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
 
                     pool2.clients[0].close();
                     this.bookieClientImpl.channels.put(bookieId, pool2);
-                    this.orderedExecutor.shutdown();
+                    this.bkc.getMainWorkerPool().shutdown();
                     break;
             }
-
-            Utils.sleep(5000); //Inserisco una sleep nella speranza che la richieste nel frattempo sia processata
 
         }catch (Exception e){
             e.printStackTrace();
@@ -227,17 +217,6 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
         });
     }
 
-    private BookkeeperInternalCallbacks.WriteCallback writeCallback(){
-
-        return (rc, ledger, entry, addr, ctx1) -> {
-            Counter counter = (Counter) ctx1;
-            counter.dec();
-            this.lastRc = rc;
-            System.out.println("WRITE: rc = " + rc + " for entry: " + entry + " at ledger: " +
-                    ledger + " at bookie: " + addr );
-
-        };
-    }
 
 
 }

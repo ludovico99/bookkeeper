@@ -33,14 +33,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.bookkeeper.bookie.*;
+import org.apache.bookkeeper.common.util.OrderedExecutor;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.client.BookKeeperTestClient;
 import org.apache.bookkeeper.common.allocator.ByteBufAllocatorWithOomHandler;
@@ -58,11 +61,13 @@ import org.apache.bookkeeper.meta.zk.ZKMetadataDriverBase;
 import org.apache.bookkeeper.metastore.InMemoryMetaStore;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
+import org.apache.bookkeeper.proto.BookieAddressResolver;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.replication.Auditor;
 import org.apache.bookkeeper.replication.AutoRecoveryMain;
 import org.apache.bookkeeper.replication.ReplicationWorker;
 import org.apache.bookkeeper.server.Main;
+import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.bookkeeper.util.PortManager;
@@ -108,7 +113,7 @@ public abstract class BookKeeperClusterTestCase {
      * bind to loopback address.
      */
     protected final ServerConfiguration baseConf = TestBKConfiguration.newServerConfiguration();
-    protected final ClientConfiguration baseClientConf = TestBKConfiguration.newClientConfiguration();
+    protected  ClientConfiguration baseClientConf = TestBKConfiguration.newClientConfiguration();
     private final ByteBufAllocatorWithOomHandler allocator = BookieResources.createAllocator(baseConf);
 
     private boolean isAutoRecoveryEnabled;
@@ -123,8 +128,20 @@ public abstract class BookKeeperClusterTestCase {
         }
     }
 
+    public void setClientConfiguration(ClientConfiguration clientConfiguration) {
+        this.baseClientConf = clientConfiguration;
+    }
+
+    public void setBaseClientConf(ClientConfiguration baseClientConf) {
+        this.baseClientConf = baseClientConf;
+    }
+
+
     public BookKeeperClusterTestCase(int numBookies) {
+
         this(numBookies, 120);
+
+
     }
 
     public BookKeeperClusterTestCase(int numBookies, int testTimeoutSecs) {

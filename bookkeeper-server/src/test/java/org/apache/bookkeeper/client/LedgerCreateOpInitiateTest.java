@@ -73,7 +73,7 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
                     {1, 2, 3, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
                     {1, 2, 1, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
-                    {1, 0, -1,ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,   BKException.Code.ZKException},
+                    {1, 0, -1,ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.ZKException},
                     {1, 0, 0, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  BKException.Code.OK},
 
                     {4, 5,  6, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
