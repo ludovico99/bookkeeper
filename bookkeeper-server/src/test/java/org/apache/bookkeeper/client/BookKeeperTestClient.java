@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 
-
+import io.netty.channel.nio.NioEventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.bookkeeper.common.concurrent.FutureUtils;
@@ -52,9 +52,8 @@ public class BookKeeperTestClient extends BookKeeper {
 
     public BookKeeperTestClient(ClientConfiguration conf, TestStatsProvider statsProvider)
             throws IOException, InterruptedException, BKException {
-        super(conf, null, null, new UnpooledByteBufAllocator(false),
-              statsProvider == null ? NullStatsLogger.INSTANCE : statsProvider.getStatsLogger(""),
-              null, null, null);
+        super(conf, null, new NioEventLoopGroup(), UnpooledByteBufAllocator.DEFAULT,
+             NullStatsLogger.INSTANCE, null, null, null);
         this.statsProvider = statsProvider;
     }
 

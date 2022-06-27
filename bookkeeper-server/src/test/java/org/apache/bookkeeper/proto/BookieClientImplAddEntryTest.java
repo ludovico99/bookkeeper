@@ -145,7 +145,7 @@ public class BookieClientImplAddEntryTest extends BookKeeperClusterTestCase {
             this.bookieClientImpl = (BookieClientImpl) this.bkc.getBookieClient();
 
 
-            LedgerHandle handle = this.bkc.createLedger(BookKeeper.DigestType.CRC32,"pippo".getBytes(StandardCharsets.UTF_8));
+            LedgerHandle handle = this.bkc.createLedger(BookKeeper.DigestType.CRC32,"test".getBytes(StandardCharsets.UTF_8));
 
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getId(),
