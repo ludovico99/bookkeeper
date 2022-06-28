@@ -27,7 +27,6 @@ import java.util.concurrent.Executors;
 public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestCase {
 
     private  BookieClientImpl bookieClientImpl;
-    private  ClientConfiguration confFaultyBookies;
 
     //Test: GetFaultyBookies()
     private int nFaultyBookies;
@@ -69,8 +68,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
         try {
             this.nFaultyBookies = nFaultyBookies;
             this.expectedFaultyBookies = Lists.newArrayList();
-            this.confFaultyBookies = TestBKConfiguration.newClientConfiguration();
-            this.setClientConfiguration(confFaultyBookies);
+            this.setClientConfiguration(TestBKConfiguration.newClientConfiguration());
 
         }catch (Exception e){
             e.printStackTrace();
@@ -99,9 +97,9 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
                     " been thrown.", true);
         else {
 
-            long threshold = confFaultyBookies.getBookieErrorThresholdPerInterval();
+            long threshold = this.baseClientConf.getBookieErrorThresholdPerInterval();
 
-            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.confFaultyBookies, bookieClientImpl,
+            DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(this.baseClientConf, bookieClientImpl,
                     serverByIndex(0).getBookieId(), 1);
 
             pool.errorCounter.getAndSet((int) --threshold);
@@ -110,7 +108,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
 
             for (int i = 1; i <= nFaultyBookies; i++) {
 
-                pool = new DefaultPerChannelBookieClientPool(this.confFaultyBookies, this.bookieClientImpl,
+                pool = new DefaultPerChannelBookieClientPool(this.baseClientConf, this.bookieClientImpl,
                         serverByIndex(i).getBookieId(), 1);
 
                 pool.errorCounter.getAndSet((int) ++threshold);

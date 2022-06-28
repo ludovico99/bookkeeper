@@ -84,9 +84,9 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                 {4, 3, 3,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
                 {4, 4, 3,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
                 {1, 0, 0,-1L,ParamType.VALID_INSTANCE,  ClientConfType.NO_STD_CONF, BKException.Code.OK},
-                {4, 5, 6,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()},
-                {1, 2, 1,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()},
-                {-1, 0, 0,0L,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}
+                {4, 5, 6,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.NotEnoughBookiesException
+                {1, 2, 1,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.NotEnoughBookiesException
+                {-1, 0, 0,0L,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}  // BKException.Code.NotEnoughBookiesException
 
         });
     }
