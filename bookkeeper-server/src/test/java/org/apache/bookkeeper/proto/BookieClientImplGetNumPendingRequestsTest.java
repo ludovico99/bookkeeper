@@ -19,10 +19,7 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.tls.SecurityProviderFactoryFactory;
-import org.apache.bookkeeper.util.ByteBufList;
-import org.apache.bookkeeper.util.ClientConfType;
-import org.apache.bookkeeper.util.Counter;
-import org.apache.bookkeeper.util.ParamType;
+import org.apache.bookkeeper.util.*;
 import org.apache.bookkeeper.util.collections.ConcurrentOpenHashMap;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -48,7 +45,6 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     private ClientConfType clientConfType;
     private BookieId bookieId;
     private int numberPendingRequestToInsert;
-
 
 
     public BookieClientImplGetNumPendingRequestsTest(ParamType bookieId, long ledgerId, ClientConfType clientConfType,int request, Object expected ) {
@@ -144,20 +140,20 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                 ByteBufList byteBufList = ByteBufList.get(toSend);
 
                 this.bookieClientImpl.addEntry(bookieId,handle.getId(), bookieServer.getBookie().getLedgerStorage().readMasterKey(handle.getId()),
-                        i, byteBufList, writeCallback(), counter , BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
+                        i, byteBufList, writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
 
             }
+
+            Utils.sleep(1000);
 
             if (this.bookieIdParamType == ParamType.VALID_INSTANCE) this.bookieId = bookieId;
 
             if (this.clientConfType == ClientConfType.CLOSED_CONFIG) this.bookieClientImpl.close();
 
 
-
-
         }catch (Exception e){
             e.printStackTrace();
-            this.exceptionInConfigPhase = true;
+            //this.exceptionInConfigPhase = true;
         }
 
     }
@@ -168,10 +164,10 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
         return Arrays.asList(new Object[][]{
                 
                 // Bookie Id,            ledger Id,   Client conf type,          Request to insert, expected Value
-                {ParamType.VALID_INSTANCE,    0L,   ClientConfType.CLOSED_CONFIG,    20,              0L},
-                {ParamType.VALID_INSTANCE,    -5L,  ClientConfType.CLOSED_CONFIG,    20,              0L},
                 {ParamType.VALID_INSTANCE,    0L,   ClientConfType.STD_CONF,         20,              20L},
                 {ParamType.VALID_INSTANCE,   -5L,   ClientConfType.STD_CONF,         20,              20L},
+                {ParamType.VALID_INSTANCE,    0L,   ClientConfType.CLOSED_CONFIG,    20,              0L},
+                {ParamType.VALID_INSTANCE,    -5L,  ClientConfType.CLOSED_CONFIG,    20,              0L},
                 {ParamType.INVALID_INSTANCE,  0L,   ClientConfType.STD_CONF,         20,              true}, //Illegal Argument exception
                 {ParamType.INVALID_INSTANCE, -5L,   ClientConfType.STD_CONF,         20,              true}, //Illegal Argument exception
                 {ParamType.NULL_INSTANCE,     0L,   ClientConfType.STD_CONF,         20,              true}, //Null pointer exception
@@ -185,22 +181,27 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
     @Test
     public void test_getNumPendingRequests() {
 
-        if (this.exceptionInConfigPhase)
-            Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
+
+        if (this.exceptionInConfigPhase) Assert.assertTrue("No exception was expected, but an exception during the set up of the test case has" +
                     " been thrown.", true);
         else {
                 try {
+
                     long actual = this.bookieClientImpl.getNumPendingRequests(this.bookieId, this.ledgerId);
+
+
+                    System.out.println(actual);
                     Assert.assertEquals(this.expectedNumPendingRequests, actual);
 
+
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (this.expectedNumPendingRequests instanceof Boolean)
                     Assert.assertTrue("Exception that i expect is raised", (Boolean) this.expectedNumPendingRequests);
                     else Assert.fail("test case failed");
                 }
         }
     }
-
 
     private BookkeeperInternalCallbacks.WriteCallback writeCallback(){
 
