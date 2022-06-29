@@ -170,13 +170,13 @@ public class BookieClientImplAddThenReadEntryTest extends BookKeeperClusterTestC
     public static Collection<Object[]> getParameters() {
 
         return Arrays.asList(new Object[][]{
-                    //Bookie_ID            Ledger_id   Entry_id   ReadEntryCallback           Object                 Flags          masterKey,          ClientConf           Raise exception
+                    //Bookie_ID            Ledger_id   Entry_id   ReadEntryCallback           Object                 Flags          masterKey,                  ClientConf           Raise exception
                 {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.OK},
                 {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.INVALID_INSTANCE,  ClientConfType.STD_CONF,     BKException.Code.OK},
                 {  ParamType.INVALID_INSTANCE,    0L,    0L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.BookieHandleNotAvailableException},
-                {  ParamType.VALID_INSTANCE,     -5L,   0L,    ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.NoSuchLedgerExistsException},
+                {  ParamType.VALID_INSTANCE,     -5L,    0L,    ParamType.VALID_INSTANCE, new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.NoSuchLedgerExistsException},
                 {  ParamType.VALID_INSTANCE,      0L,   -5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.TimeoutException},
-                {  ParamType.NULL_INSTANCE,       0L,    5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     true},
+                {  ParamType.NULL_INSTANCE,       0L,   -5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     true},
                 {  ParamType.VALID_INSTANCE,     -5L,   -5L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.NoSuchLedgerExistsException},
                 {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.CLOSED_CONFIG,BKException.Code.ClientClosedException}
 

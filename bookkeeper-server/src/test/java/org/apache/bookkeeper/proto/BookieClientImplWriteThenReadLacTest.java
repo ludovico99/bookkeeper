@@ -200,9 +200,10 @@ public class BookieClientImplWriteThenReadLacTest extends BookKeeperClusterTestC
                 { ParamType.VALID_INSTANCE,     -5L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.NoSuchEntryException},
                 { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.INVALID_INSTANCE,   -5L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
+
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.REJECT_CONFIG,   BKException.Code.InterruptedException},
+                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(),  ClientConfType.REJECT_CONFIG,   BKException.Code.InterruptedException}
         }) ;
     }
 

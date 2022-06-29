@@ -9,11 +9,9 @@ import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
-import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -27,7 +25,7 @@ public class BookieClientImplLookupClientTest  {
 
     private  Boolean exceptionInConfigPhase = false;
 
-    //Test: isWritable(BookieId address, long key)
+    //Test public PerChannelBookieClientPool lookupClient(BookieId addr)
     private BookieClientImpl bookieClient;
     private BookieId bookieId;
     private Object expectedLookupClient;

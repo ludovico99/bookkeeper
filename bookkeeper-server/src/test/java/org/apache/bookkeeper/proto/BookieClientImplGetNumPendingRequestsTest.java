@@ -166,12 +166,12 @@ public class BookieClientImplGetNumPendingRequestsTest extends BookKeeperCluster
                 // Bookie Id,            ledger Id,   Client conf type,          Request to insert, expected Value
                 {ParamType.VALID_INSTANCE,    0L,   ClientConfType.STD_CONF,         20,              20L},
                 {ParamType.VALID_INSTANCE,   -5L,   ClientConfType.STD_CONF,         20,              20L},
-                {ParamType.VALID_INSTANCE,    0L,   ClientConfType.CLOSED_CONFIG,    20,              0L},
-                {ParamType.VALID_INSTANCE,    -5L,  ClientConfType.CLOSED_CONFIG,    20,              0L},
-                {ParamType.INVALID_INSTANCE,  0L,   ClientConfType.STD_CONF,         20,              true}, //Illegal Argument exception
-                {ParamType.INVALID_INSTANCE, -5L,   ClientConfType.STD_CONF,         20,              true}, //Illegal Argument exception
+                {ParamType.INVALID_INSTANCE,  0L,   ClientConfType.STD_CONF,         20,              true}, //Illegal Argument exception --> Null pointer exception
+                {ParamType.INVALID_INSTANCE, -5L,   ClientConfType.STD_CONF,         20,              true}, //Illegal Argument exception --> Null pointer exception
                 {ParamType.NULL_INSTANCE,     0L,   ClientConfType.STD_CONF,         20,              true}, //Null pointer exception
                 {ParamType.NULL_INSTANCE,    -5L,   ClientConfType.STD_CONF,         20,              true}, //Null pointer exception
+                {ParamType.VALID_INSTANCE,    0L,   ClientConfType.CLOSED_CONFIG,    20,              0L},
+                {ParamType.VALID_INSTANCE,    -5L,  ClientConfType.CLOSED_CONFIG,    20,              0L},
                 {ParamType.VALID_INSTANCE,     0L,  ClientConfType.NOT_WRITABLE_PCBC,20,              20 |  PENDINGREQ_NOTWRITABLE_MASK}
         }) ;
     }
