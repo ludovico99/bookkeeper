@@ -6,10 +6,8 @@ import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.apache.bookkeeper.util.Utils;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
@@ -84,8 +82,8 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
                     {4, 4, 3, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
                     {1, 0, 0, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
                     {4, 5, 6, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.NotEnoughBookiesException
-                    {1, 2, 1, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.NotEnoughBookiesException
-                    {-1, 0, 0,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()} // BKException.Code.NotEnoughBookiesException
+                    {1, 2, 1, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.ZKException
+                    {-1, 0, 0,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()} //  new IllegalArgumentException()
 
             });
         }
@@ -148,8 +146,6 @@ public  class LedgerCreateOpInitiateTest extends BookKeeperClusterTestCase {
 
             }
         }
-
-
 }
 
 

@@ -26,7 +26,7 @@ public class BookieClientImplLookupClientTest  {
     private  Boolean exceptionInConfigPhase = false;
 
     //Test public PerChannelBookieClientPool lookupClient(BookieId addr)
-    private BookieClientImpl bookieClient;
+    private BookieClientImpl bookieClientImpl;
     private BookieId bookieId;
     private Object expectedLookupClient;
 
@@ -38,30 +38,43 @@ public class BookieClientImplLookupClientTest  {
     }
 
     private void configureLookupClient(ParamType bookieId, ClientConfType bookieClient) {
-
+       
+        
         try {
-            ClientConfiguration confLookupValid=TestBKConfiguration.newClientConfiguration();
-            ClientConfiguration confLookupInvalid=TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(0);
+            PerChannelBookieClientPool pool = null;
+            PerChannelBookieClientPool pool2 = null;
+            
+            switch (bookieClient){
+                case STD_CONF:
+                case CLOSED_CONFIG:
+                    ClientConfiguration confLookupValid =TestBKConfiguration.newClientConfiguration();
+                    bookieClientImpl= new BookieClientImpl(confLookupValid, new NioEventLoopGroup(),
+                            UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                            new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                            BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-            BookieClientImpl validConfig = new BookieClientImpl(confLookupValid, new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+                    pool = new DefaultPerChannelBookieClientPool(confLookupValid, bookieClientImpl,
+                            BookieId.parse("Bookie-1"), 1);
 
-            BookieClientImpl invalidConfig = new BookieClientImpl(confLookupInvalid, new NioEventLoopGroup(),
-                    UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
-                    new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
-                    BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
+                    bookieClientImpl.channels.put(BookieId.parse("Bookie-1"), pool);
+                    break;
+                case INVALID_CONFIG:
+                    ClientConfiguration confLookupInvalid =TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(0);
+                    
+                   this.bookieClientImpl = new BookieClientImpl(confLookupInvalid, new NioEventLoopGroup(),
+                            UnpooledByteBufAllocator.DEFAULT, OrderedExecutor.newBuilder().build(), Executors.newSingleThreadScheduledExecutor(
+                            new DefaultThreadFactory("BookKeeperClientScheduler")), NullStatsLogger.INSTANCE,
+                            BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
 
-            PerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(confLookupValid, validConfig,
-                    BookieId.parse("Bookie-1"), 1);
+                   pool2 = new DefaultPerChannelBookieClientPool(confLookupInvalid, bookieClientImpl,
+                            BookieId.parse("Bookie-1"), 1);
 
-            validConfig.channels.put(BookieId.parse("Bookie-1"), pool);
-
-            PerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(confLookupInvalid, invalidConfig,
-                    BookieId.parse("Bookie-1"), 1);
-
-            invalidConfig.channels.put(BookieId.parse("Bookie-1"), pool2);
+                    bookieClientImpl.channels.put(BookieId.parse("Bookie-1"), pool2);
+                    break;
+                    
+            }
+            
+            
 
             switch (bookieId) {
                 case VALID_INSTANCE:
@@ -69,16 +82,14 @@ public class BookieClientImplLookupClientTest  {
                     switch (bookieClient) {
                         case STD_CONF:
                             this.expectedLookupClient = pool;
-                            this.bookieClient = validConfig;
                             break;
                         case INVALID_CONFIG:
                             this.expectedLookupClient = pool2;
-                            this.bookieClient = invalidConfig;
                             break;
                         case CLOSED_CONFIG:
                             this.expectedLookupClient = null;
-                            validConfig.close();
-                            this.bookieClient = validConfig;
+                            this.bookieClientImpl.close();
+                            break;
                     }
                     break;
 
@@ -87,16 +98,13 @@ public class BookieClientImplLookupClientTest  {
                     switch (bookieClient) {
                         case STD_CONF:
                             this.expectedLookupClient = Boolean.FALSE;
-                            this.bookieClient = validConfig;
                             break;
                         case INVALID_CONFIG:
                             this.expectedLookupClient = new IllegalArgumentException();
-                            this.bookieClient = invalidConfig;
                             break;
                         case CLOSED_CONFIG:
                             this.expectedLookupClient = null;
-                            validConfig.close();
-                            this.bookieClient = validConfig;
+                            this.bookieClientImpl.close();
                             break;
                     }
                     break;
@@ -106,14 +114,10 @@ public class BookieClientImplLookupClientTest  {
                     this.expectedLookupClient = new NullPointerException();
                     switch (bookieClient) {
                         case STD_CONF:
-                            this.bookieClient = validConfig;
-                            break;
                         case INVALID_CONFIG:
-                            this.bookieClient = invalidConfig;
                             break;
                         case CLOSED_CONFIG:
-                            validConfig.close();
-                            this.bookieClient = validConfig;
+                            this.bookieClientImpl.close();
                     }
                     break;
             }
@@ -159,7 +163,7 @@ public class BookieClientImplLookupClientTest  {
                     " been thrown.", true);
         else {
             try {
-                PerChannelBookieClientPool client = this.bookieClient.lookupClient(this.bookieId);
+                PerChannelBookieClientPool client = this.bookieClientImpl.lookupClient(this.bookieId);
                 if(this.expectedLookupClient instanceof Boolean) Assert.assertFalse((Boolean) this.expectedLookupClient);
                 else Assert.assertEquals("Expected instance", this.expectedLookupClient, client);
             } catch (Exception e) {

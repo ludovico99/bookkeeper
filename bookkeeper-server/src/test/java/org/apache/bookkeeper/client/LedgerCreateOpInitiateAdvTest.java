@@ -1,14 +1,14 @@
 package org.apache.bookkeeper.client;
 
 import org.apache.bookkeeper.client.api.WriteFlag;
-import org.apache.bookkeeper.proto.BookieClientImpl;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
+import org.apache.bookkeeper.util.Utils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,7 +37,7 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
     public LedgerCreateOpInitiateAdvTest(int ensembleSize, int writeQuorumSize, int ackQuorumSize, long ledgerId, ParamType cb, ClientConfType clientConfType, Object expectedValue) {
         super(3);
-        configureInitiateAdv(ensembleSize, writeQuorumSize, ackQuorumSize, ledgerId, cb,clientConfType, expectedValue);
+        configureInitiateAdv(ensembleSize, writeQuorumSize, ackQuorumSize, ledgerId, cb, clientConfType, expectedValue);
     }
 
 
@@ -71,10 +71,10 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                 {-1, -2, -1,0L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF, new IllegalArgumentException()},
                 {-1, -2, -2,0L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF, new IllegalArgumentException()},
 
-                {1, 2, 3,  -1L,   ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,  BKException.Code.ZKException},
-                {1, 2, 1,  0L,   ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,   new IllegalArgumentException()},
-                {1, 0, -1, -1L, ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,    BKException.Code.ZKException},
-                {1, 0, 0,  0L,   ParamType.VALID_INSTANCE,   ClientConfType.STD_CONF,   BKException.Code.OK},
+                {1, 2, 1, 0L, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,  new IllegalArgumentException()},
+                {1, 2, 3, -1L, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
+                {1, 0, -1, -1L, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF, BKException.Code.ZKException},
+                {1, 0, 0, 0L, ParamType.VALID_INSTANCE, ClientConfType.STD_CONF,   BKException.Code.OK},
 
                 {4, 5,  6,0L, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
                 {4, 5,  5,0L, ParamType.VALID_INSTANCE,  ClientConfType.STD_CONF, BKException.Code.NotEnoughBookiesException},
@@ -83,17 +83,17 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
                 {4, 3, 3,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
                 {4, 4, 3,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.NotEnoughBookiesException},
-                {1, 0, 0,-1L,ParamType.VALID_INSTANCE,  ClientConfType.NO_STD_CONF, BKException.Code.OK},
+                {1, 0, 0,-1L,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, BKException.Code.OK},
                 {4, 5, 6,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.NotEnoughBookiesException
-                {1, 2, 1,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.NotEnoughBookiesException
-                {-1, 0, 0,0L,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}  // BKException.Code.NotEnoughBookiesException
+                {1, 2, 1,0L, ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}, // BKException.Code.ZKException
+                {-1, 0, 0,0L,ParamType.VALID_INSTANCE,   ClientConfType.NO_STD_CONF, new NullPointerException()}  //  new IllegalArgumentException()
 
         });
     }
 
 
     @Before
-    public void set_up(){
+    public void set_up() {
 
         try {
             switch (this.clientConfType) {
@@ -105,9 +105,9 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
                     break;
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            this.exceptionInConfigPhase = true; //Ci sono tanti errori nella connessione con Zookkeeper
+            this.exceptionInConfigPhase = true;
         }
 
 
@@ -131,18 +131,15 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
                 ledgerCreateOp.initiateAdv(this.ledgerId);
 
-                if(this.expectedValue instanceof Integer) {
-                    if(((int) this.expectedValue != BKException.Code.ZKException)) {
+                if (this.expectedValue instanceof Integer) {
+                    if (((int) this.expectedValue != BKException.Code.ZKException)) {
                         counter.wait(0);
                         ArgumentCaptor<Integer> argument = ArgumentCaptor.forClass(int.class);
                         verify(this.cb).createComplete(argument.capture(), nullable(LedgerHandle.class), isA(Object.class));
                         Assert.assertEquals(this.expectedValue, argument.getValue());
-                    }
-                    else verifyNoInteractions(this.cb);
-                }
-                else Assert.fail("Test case has failed");
-            }
-            catch (Exception e) {
+                    } else verifyNoInteractions(this.cb);
+                } else Assert.fail("Test case has failed");
+            } catch (Exception e) {
                 e.printStackTrace();
                 Assert.assertEquals("Exception that i expect is raised", this.expectedValue.getClass(), e.getClass());
 
@@ -150,6 +147,4 @@ public class LedgerCreateOpInitiateAdvTest extends BookKeeperClusterTestCase {
 
         }
     }
-
-
 }

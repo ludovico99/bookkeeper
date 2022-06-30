@@ -439,7 +439,7 @@
 				<param>org.apache.bookkeeper.client.LedgerCreateOpInitiateTest</param>
 				<param>org.apache.bookkeeper.client.LedgerCreateOpInitiateAdvTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplAddEntryTest</param>
-                <param>org.apache.bookkeeper.proto.BookieClientImplAddThenReadEntryTest</param>
+                <param>org.apache.bookkeeper.proto.BookieClientImplReadEntryAfterAddTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplCreateTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplForceLedger</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplGetFaultyBookiesTest</param>
@@ -447,7 +447,7 @@
 				<param>org.apache.bookkeeper.proto.BookieClientImplGetNumPendingRequestsTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplIsWritableTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplLookupClientTest</param>
-				<param>org.apache.bookkeeper.proto.BookieClientImplWriteThenReadLacTest</param>
+				<param>org.apache.bookkeeper.proto.BookieClientImplReadLacAfterWriteLacTest</param>
 				<param>org.apache.bookkeeper.proto.BookieClientImplWriteLacTest</param>
                 
               </targetTests>
