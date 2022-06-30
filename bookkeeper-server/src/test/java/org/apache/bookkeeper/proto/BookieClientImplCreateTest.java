@@ -1,6 +1,5 @@
 package org.apache.bookkeeper.proto;
 
-import com.google.protobuf.ExtensionRegistry;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
@@ -15,7 +14,6 @@ import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
-import org.apache.bookkeeper.tls.SecurityException;
 import org.apache.bookkeeper.tls.SecurityHandlerFactory;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
@@ -68,7 +66,6 @@ public class BookieClientImplCreateTest{
 
             this.clientConfiguration.setLimitStatsLogging(true);
 
-            ClientAuthProvider.Factory factory = AuthProviderFactoryFactory.newClientAuthProviderFactory(this.clientConfiguration);
 
             this.bookieClientImpl = new BookieClientImpl(this.clientConfiguration,eventLoopGroup ,
                     byteBufAllocator, orderedExecutor,executorService , logger,
@@ -151,7 +148,7 @@ public class BookieClientImplCreateTest{
                     Assert.fail("Test case has failed");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Assert.assertTrue("Invalid istance for PerChannelBookieClientPool",(Boolean) this.expectedCreate);
+                    Assert.assertTrue("Invalid istance for PerChannelBookieClientPool", this.expectedCreate);
                 }
             } else {
 

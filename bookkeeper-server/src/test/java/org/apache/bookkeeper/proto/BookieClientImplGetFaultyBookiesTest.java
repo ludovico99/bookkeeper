@@ -1,26 +1,18 @@
 package org.apache.bookkeeper.proto;
 
 import com.google.common.collect.Lists;
-import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
-import org.apache.bookkeeper.common.util.OrderedExecutor;
-import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
-import org.apache.bookkeeper.net.BookieSocketAddress;
-import org.apache.bookkeeper.stats.NullStatsLogger;
+
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.*;
-import java.util.concurrent.Executors;
 
 
 @RunWith(value = Parameterized.class)

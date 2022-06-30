@@ -5,8 +5,6 @@ import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.Counter;
 import org.apache.bookkeeper.util.ParamType;
-import org.apache.bookkeeper.util.Utils;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

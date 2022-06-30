@@ -9,7 +9,6 @@ import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.stats.NullStatsLogger;
-import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
 import org.apache.bookkeeper.util.ClientConfType;
 import org.apache.bookkeeper.util.ParamType;
 import org.junit.*;
@@ -27,7 +26,6 @@ public class BookieClientImplIsWritableTest {
 
     //Test: isWritable(BookieId address, long key)
     private BookieClientImpl bookieClientImpl;
-    private ParamType bookieIdParamType;
     private BookieId bookieId;
     private long key;
     private Object expectedIsWritable;
@@ -43,7 +41,6 @@ public class BookieClientImplIsWritableTest {
     private void configureIsWritable(ParamType enumType,long key,ClientConfType clientConfType, Object expected) {
         this.key = key;
         this.expectedIsWritable = expected;
-        this.bookieIdParamType = enumType;
 
         try {
 
