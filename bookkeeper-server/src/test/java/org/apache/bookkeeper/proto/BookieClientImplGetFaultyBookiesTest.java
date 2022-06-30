@@ -113,6 +113,7 @@ public class BookieClientImplGetFaultyBookiesTest extends BookKeeperClusterTestC
             this.expectedFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 
             List<BookieId> actualFaultyBookies = this.bookieClientImpl.getFaultyBookies();
+            Assert.assertNotNull(actualFaultyBookies);
 
             actualFaultyBookies.sort(Comparator.comparing(BookieId::getId));
 

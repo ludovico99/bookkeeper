@@ -185,6 +185,7 @@ public class BookieClientImplGetListsOfEntriesLedgerTest extends BookKeeperClust
             try {
 
                 AvailabilityOfEntriesOfLedger entriesOfLedger = this.bookieClientImpl.getListOfEntriesOfLedger(this.bookieId, this.ledgerId).join();
+                Assert.assertNotNull(entriesOfLedger);
                 Assert.assertEquals(this.expectedGetListsOfEntriesLedger ,entriesOfLedger.getTotalNumOfAvailableEntries());
 
             } catch (Exception e){
