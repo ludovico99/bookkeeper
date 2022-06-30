@@ -148,7 +148,28 @@ public class BookieClientImplReadEntryAfterAddTest extends BookKeeperClusterTest
             }
 
             if(this.bookieIdParamType == ParamType.VALID_INSTANCE) this.bookieId = bookieId;
-            if(this.clientConfTypeEnum == ClientConfType.CLOSED_CONFIG) this.bookieClientImpl.close();
+            switch (clientConfTypeEnum){
+                case STD_CONF:
+                    break;
+                case CLOSED_CONFIG:
+                    this.bookieClientImpl.close();
+                    break;
+                case INVALID_CONFIG:
+                    DefaultPerChannelBookieClientPool pool = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , this.bookieClientImpl, bookieId, 1);
+
+                    pool.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool);
+                    break;
+                case REJECT_CONFIG:
+                    DefaultPerChannelBookieClientPool pool2 = new DefaultPerChannelBookieClientPool(TestBKConfiguration.newClientConfiguration().setNumChannelsPerBookie(1)
+                            , this.bookieClientImpl, bookieId, 1);
+
+                    pool2.clients[0].close();
+                    this.bookieClientImpl.channels.put(bookieId, pool2);
+                    this.bkc.getMainWorkerPool().shutdown();
+                    break;
+            }
             if(this.msParamType == ParamType.VALID_INSTANCE) this.ms = bookieServer.getBookie().getLedgerStorage().readMasterKey(handle.getId());
 
         }catch (Exception e){
@@ -171,8 +192,10 @@ public class BookieClientImplReadEntryAfterAddTest extends BookKeeperClusterTest
                 {  ParamType.VALID_INSTANCE,      0L,   -5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.TimeoutException},
                 {  ParamType.NULL_INSTANCE,       0L,   -5L,   ParamType.VALID_INSTANCE,  new Counter() , BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     true},
                 {  ParamType.VALID_INSTANCE,     -5L,   -5L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.STD_CONF,     BKException.Code.NoSuchLedgerExistsException},
-                {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.CLOSED_CONFIG,BKException.Code.ClientClosedException}
 
+                {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.CLOSED_CONFIG, BKException.Code.ClientClosedException},
+                {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.INVALID_CONFIG,BKException.Code.ClientClosedException},
+                {  ParamType.VALID_INSTANCE,      0L,    0L,   ParamType.VALID_INSTANCE,  new Counter(),  BookieProtocol.READENTRY, ParamType.VALID_INSTANCE,    ClientConfType.REJECT_CONFIG, BKException.Code.InterruptedException}
         }) ;
     }
 
