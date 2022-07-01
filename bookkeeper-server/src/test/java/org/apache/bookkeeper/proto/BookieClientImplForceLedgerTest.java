@@ -1,8 +1,11 @@
 package org.apache.bookkeeper.proto;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
+import org.apache.bookkeeper.client.api.WriteFlag;
 import org.apache.bookkeeper.conf.TestBKConfiguration;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.test.BookKeeperClusterTestCase;
@@ -35,6 +38,7 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
     private ParamType bookieIdParamType;
     private  ClientConfType clientConfType;
     private BookieId bookieId;
+    private int lastRC = -1;
 
 
     public BookieClientImplForceLedgerTest(ParamType bookieId, long ledgerId , ParamType cb, Object ctx, ClientConfType clientConfType, Object expectedForceLedger) {
@@ -109,6 +113,23 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             bookieServer.getBookie().getLedgerStorage().
                     setMasterKey(handle.getLedgerMetadata().getLedgerId(),
                             "masterKey".getBytes(StandardCharsets.UTF_8));
+            Counter counter = new Counter();
+
+            while(this.lastRC != 0) {
+                counter.i = 1;
+                ByteBuf toSend = Unpooled.buffer(1024);
+                toSend.resetReaderIndex();
+                toSend.resetWriterIndex();
+                toSend.writeLong(handle.getId());
+                toSend.writeLong(0L);
+                toSend.writeBytes("Entry content".getBytes(StandardCharsets.UTF_8));
+                toSend.writerIndex(toSend.capacity());
+
+                bookieClientImpl.addEntry(bookieId, handle.getId(), bookieServer.getBookie().getLedgerStorage().readMasterKey(handle.getId()),
+                        0L, ByteBufList.get(toSend), writeCallback(), counter, BookieProtocol.ADDENTRY, false, EnumSet.allOf(WriteFlag.class));
+
+                counter.wait(0);
+            }
 
 
             if (this.bookieIdParamType.equals(ParamType.VALID_INSTANCE)) this.bookieId =bookieId;
@@ -154,9 +175,8 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
                 { ParamType.VALID_INSTANCE,     -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.OK},
                 { ParamType.INVALID_INSTANCE,    0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
                 { ParamType.INVALID_INSTANCE,   -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.STD_CONF,        BKException.Code.BookieHandleNotAvailableException},
-                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      -5L,          ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
-                { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.CLOSED_CONFIG,   BKException.Code.ClientClosedException},
+                { ParamType.VALID_INSTANCE,      -5L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.INVALID_CONFIG,  BKException.Code.ClientClosedException},
                 { ParamType.VALID_INSTANCE,      0L,           ParamType.VALID_INSTANCE,  new Counter(), ClientConfType.REJECT_CONFIG,   BKException.Code.InterruptedException},
         }) ;
     }
@@ -204,6 +224,18 @@ public class BookieClientImplForceLedgerTest extends BookKeeperClusterTestCase {
             }
 
         });
+    }
+
+    private BookkeeperInternalCallbacks.WriteCallback writeCallback(){
+
+        return (rc, ledger, entry, addr, ctx1) -> {
+            Counter counter = (Counter) ctx1;
+            counter.dec();
+            this.lastRC = rc;
+            System.out.println("WRITE: rc = " + rc + " for entry: " + entry + " at ledger: " +
+                    ledger + " at bookie: " + addr );
+
+        };
     }
 
 

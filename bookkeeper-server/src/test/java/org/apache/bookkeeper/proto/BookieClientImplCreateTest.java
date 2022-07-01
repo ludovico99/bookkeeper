@@ -43,14 +43,15 @@ public class BookieClientImplCreateTest{
     private boolean forceUseV3;
 
 
-    public BookieClientImplCreateTest(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory,boolean forceUseV3) {
-        configureCreateTest(bookieId, perChannelBookieClientPool, shFactory, forceUseV3);
+    public BookieClientImplCreateTest(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory,boolean forceUseV3, boolean expectedCreate) {
+        configureCreateTest(bookieId, perChannelBookieClientPool, shFactory, forceUseV3, expectedCreate);
 
     }
 
-    private void configureCreateTest(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory, boolean forceUseV3) {
+    private void configureCreateTest(ParamType bookieId, ParamType perChannelBookieClientPool, ParamType shFactory, boolean forceUseV3,boolean expectedCreate) {
         this.pcbcPoolParamType = perChannelBookieClientPool;
         this.forceUseV3 = forceUseV3;
+        this.expectedCreate = expectedCreate;
 
 
         try {
@@ -81,20 +82,6 @@ public class BookieClientImplCreateTest{
             switch (bookieId){
                 case VALID_INSTANCE:
                     this.bookieId = BookieId.parse("Bookie-1");
-                    switch (perChannelBookieClientPool) {
-                        case VALID_INSTANCE:
-                            this.expectedCreate = false;
-                            break;
-
-                        case NULL_INSTANCE:
-                            this.pcbcPool = null;
-                            this.expectedCreate = false;
-                            break;
-
-                        case INVALID_INSTANCE:
-                            this.expectedCreate = true;
-                            break;
-                    }
                     break;
 
                 case NULL_INSTANCE:
@@ -123,13 +110,15 @@ public class BookieClientImplCreateTest{
                 //            SecurityHandlerFactory shFactory, boolean forceUseV3)
 
         return Arrays.asList(new Object[][]{
-                //Bookie_ID                      PerChannelBookieClientPool          SecurityHandlerFactory   forceUseV3
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  false},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  true},
-                { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  false},
-                { ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  false},
-                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  true},
-                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  true}
+                //Bookie_ID                      PerChannelBookieClientPool          SecurityHandlerFactory   forceUseV3, Raise Exception
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  false,    false},
+                { ParamType.VALID_INSTANCE,      ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  true,     false},
+                { ParamType.VALID_INSTANCE,      ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  false,    false},
+                { ParamType.VALID_INSTANCE,      ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  true,     true},
+                { ParamType.NULL_INSTANCE,       ParamType.VALID_INSTANCE,           ParamType.VALID_INSTANCE,  false,    true},
+                { ParamType.NULL_INSTANCE,       ParamType.INVALID_INSTANCE,         ParamType.VALID_INSTANCE,  false,    true},
+                { ParamType.NULL_INSTANCE,       ParamType.NULL_INSTANCE,            ParamType.VALID_INSTANCE,  false,    true},
+
 
         }) ;
     }
